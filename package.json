@@ -5,7 +5,8 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "firebase": "^11.9.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "prisma": "^6.10.1"

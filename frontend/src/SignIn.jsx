@@ -1,13 +1,15 @@
 import React from 'react'
 import { useState } from 'react'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-// Adjust the import path below if you move firebase.js to the frontend
 import { auth } from "../../backend/api/firebase";
+import {useNavigate} from "react-router-dom"
+
 export default function SignIn (){
     const [email, setEmail] = useState(""); 
     const [password, setPassword] = useState("");
     const [error, setError] = useState("")
-    const [user, setUser] = useState("") //does this have to be set to null?
+    const [user, setUser] = useState("") 
+    const navigate = useNavigate(); 
     
 
     //handle sign in function 
@@ -17,6 +19,7 @@ export default function SignIn (){
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             setUser(userCredential.user);
+            navigate("/main") // navigates to main page
         } catch (error) {
             setError("Could not find account, re-enter password or please register.");
             
@@ -30,6 +33,7 @@ export default function SignIn (){
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             setUser(userCredential.user);
             console.log('Registration successful!')
+            navigate("/main") 
         } catch (error) {
             setError("Registration not working." + error.message)
         }
