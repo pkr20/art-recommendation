@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../backend/api/firebase";
+import { auth } from "../../../backend/api/firebase";
 import {useNavigate} from "react-router-dom"
 
 export default function SignIn (){
@@ -12,7 +12,7 @@ export default function SignIn (){
     const navigate = useNavigate(); 
     
 
-    //handle sign in function 
+    //handle sign in function of working account
     const handleSignIn = async (e) => {
         e.preventDefault(); 
         setError("")
@@ -26,6 +26,7 @@ export default function SignIn (){
         }
     }
 
+    //handle registration of a new account using firebase
     const handleRegister = async (e) => {
         e.preventDefault(); 
         setError("")
