@@ -21,10 +21,9 @@ export default function MainPage() {
     <div className='main-page-container'>
       <h1>the Main Page!</h1>
       <div className='card-container'>
-        <Card/>
-        <Card/>
-        <Card/>
-        <Card/>
+        {Array.from({ length: 12 }, (_, index) => (
+          <Card key={index} />
+        ))}
       </div>
      
 
