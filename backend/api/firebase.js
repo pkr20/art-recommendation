@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -12,7 +13,7 @@ import { getAuth } from "firebase/auth";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxpltc1E46jwnF9JKoG0j_jd_epjs1PFQ",
+  apiKey: import.meta.env.FIREBASE_KEY,
   authDomain: "meta-dev-ad98e.firebaseapp.com",
   projectId: "meta-dev-ad98e",
   storageBucket: "meta-dev-ad98e.firebasestorage.app",
