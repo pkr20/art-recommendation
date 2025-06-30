@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../backend/api/firebase';
@@ -19,6 +19,22 @@ export default function MainPage() {
       console.error('Error signing out:', error);
     }
   };
+
+  //loading to check Google Places api script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => {
+      console.log(window.google && window.google.maps ? 'Success' : 'Try again');
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+
 
   return (
     <div className='main-page-container'>
