@@ -50,8 +50,11 @@ function PlacePage() {
   return (
     <div className="placepage-container">
       <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
-      <h1 className="placepage-title">{details.name}</h1>
-      <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
+      <div className="placepage-info-panel">
+        <button >Favorite</button>
+        <h1 className="placepage-title">{details.name}</h1>
+        <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
+      </div>
       {details.photos && details.photos.length > 0 && (
         <div className="placepage-photo-reel">
           {details.photos.slice(0, 8).map((photo, idx) => (
