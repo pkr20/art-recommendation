@@ -56,11 +56,15 @@ export default function MainPage() {
     };
   }, [placeType]);
 
-
+  // filter places based on search input #technical challenge
+  const filteredPlaces = places.filter(place =>
+    place.name.toLowerCase().includes(searchInput.toLowerCase()) ||
+    (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
+  );
 
   return (
     <div className='main-page-container'>
-      <h1>the Main Page!</h1>
+      <h1>Exhibit Finder</h1>
       <SearchBar searchInput={searchInput}
                 setSearchInput={setSearchInput} />
                 <div className='filter-container'>
@@ -75,7 +79,7 @@ export default function MainPage() {
         </button>
       </div>
       <div className='card-container'>
-      {places.map((place, id) => {
+      {filteredPlaces.map((place, id) => {
         //extract photo url 
         const photoUrl = place.photos && place.photos.length > 0
           ? place.photos[0].getUrl()
