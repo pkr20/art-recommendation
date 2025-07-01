@@ -10,6 +10,7 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('')
   const [places, setPlaces] = useState([]);
+  const [placeType, setPlaceType] = useState('art_gallery');
 
   const location = { lat: 40.7128, lng: -74.0060 };
 
@@ -35,8 +36,11 @@ export default function MainPage() {
         const request = {
           location,
           radius: 50000,
-          //type: ['art_gallery'], 
+          type: placeType, 
+          //query: 'art fair',
           };
+
+
           service.nearbySearch(request, (results, status) => {
             if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
               setPlaces(results);
@@ -49,7 +53,7 @@ export default function MainPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [placeType]);
 
 
 
@@ -58,6 +62,17 @@ export default function MainPage() {
       <h1>the Main Page!</h1>
       <SearchBar searchInput={searchInput}
                 setSearchInput={setSearchInput} />
+                <div className='filter-container'>
+
+        <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
+          onClick={() => setPlaceType('art_gallery')}>
+          Art Galleries
+        </button>
+        <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
+          onClick={() => setPlaceType('museum')}>
+          Museums
+        </button>
+      </div>
       <div className='card-container'>
       {places.map((place, id) => (
           <Card
