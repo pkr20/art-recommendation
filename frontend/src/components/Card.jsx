@@ -1,11 +1,11 @@
 import React from 'react'
 
-function Card() {
+function Card({name, location, image}) {
     return (
         <div className='card'>
-            <h2>Gallery Name</h2>
-            <p>Location</p>
-            <img src="/public/gallery-placeholder.png" alt="Art Gallery" style={{width: "100%"}} />
+            <h2>{name || 'Gallery Name'}</h2>
+            <p>{location || 'Location'}</p>
+            <img src={image || "/public/gallery-placeholder.png"} alt="Art Gallery" style={{width: "100%"}} />
         </div>
     );
 }
