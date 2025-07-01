@@ -142,3 +142,63 @@
   box-shadow: 0 4px 12px rgba(245, 101, 223, 0.3);
 }
 
+
+/* place pages css*/ 
+.placepage-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  font-family: inherit;
+}
+
+.placepage-back-btn {
+  background: none;
+  border: none;
+  color: #f565df;
+  font-size: 1.1em;
+  cursor: pointer;
+  margin-bottom: 16px;
+  font-weight: bold;
+}
+
+.placepage-title {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.placepage-address {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.placepage-photo-reel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  padding-bottom: 8px;
+}
+
+.placepage-photo {
+  border-radius: 8px;
+  height: 180px;
+  width: auto;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.placepage-section {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.placepage-review {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+

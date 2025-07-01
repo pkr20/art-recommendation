@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function getPriceLevel(level) {
   if (level === 0) return 'Free';
@@ -12,13 +12,11 @@ function getPriceLevel(level) {
 
 function PlacePage() {
   const { placeId } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    //load Google Maps script if not already loaded
     if (!window.google || !window.google.maps) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -43,28 +41,37 @@ function PlacePage() {
   }, [placeId]);
 
   if (error) {
-    return <div >{error}</div>;
+    return <div className="placepage-container">{error}</div>;
   }
   if (!details) {
-    return <div >No details found.</div>;
+    return <div className="placepage-container">Loading place details...</div>;
   }
 
   return (
-    <div >
-      <button onClick={() => navigate(-1)}>Back</button>
-      <h1>{details.name}</h1>
-      <p>{details.formatted_address || details.vicinity}</p>
+    <div className="placepage-container">
+      <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
+      <h1 className="placepage-title">{details.name}</h1>
+      <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
       {details.photos && details.photos.length > 0 && (
-        <img src={details.photos[0].getUrl()} alt={details.name} style={{ width: '100%', maxWidth: 400 }} />
+        <div className="placepage-photo-reel">
+          {details.photos.slice(0, 8).map((photo, idx) => (
+            <img
+              key={idx}
+              src={photo.getUrl({ maxWidth: 400, maxHeight: 300 })}
+              alt={details.name + ' photo ' + (idx + 1)}
+              className="placepage-photo"
+            />
+          ))}
+        </div>
       )}
-      <div >
+      <div className="placepage-section">
         <strong>Rating:</strong> {details.rating} ({details.user_ratings_total} reviews)
       </div>
-      <div>
+      <div className="placepage-section">
         <strong>Price Level:</strong> {getPriceLevel(details.price_level)}
       </div>
       {details.opening_hours && details.opening_hours.weekday_text && (
-        <div >
+        <div className="placepage-section">
           <strong>Opening Hours:</strong>
           <div>
             {details.opening_hours.weekday_text.map((line, id) => (
@@ -74,11 +81,11 @@ function PlacePage() {
         </div>
       )}
       {details.reviews && details.reviews.length > 0 && (
-        <div >
+        <div className="placepage-section">
           <strong>Top Reviews:</strong>
           <div>
             {details.reviews.slice(0, 3).map((review, id) => (
-              <div key={id} >
+              <div key={id} className="placepage-review">
                 <div><strong>{review.author_name}</strong> ({review.rating} ★):</div>
                 <div>{review.text}</div>
               </div>
