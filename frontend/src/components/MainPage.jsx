@@ -11,6 +11,7 @@ export default function MainPage() {
   const [searchInput, setSearchInput] = useState('')
   const [places, setPlaces] = useState([]);
   const [placeType, setPlaceType] = useState('art_gallery');
+  
 
   const location = { lat: 40.7128, lng: -74.0060 };
 
@@ -55,11 +56,15 @@ export default function MainPage() {
     };
   }, [placeType]);
 
-
+  // filter places based on search input #technical challenge
+  const filteredPlaces = places.filter(place =>
+    place.name.toLowerCase().includes(searchInput.toLowerCase()) ||
+    (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
+  );
 
   return (
     <div className='main-page-container'>
-      <h1>the Main Page!</h1>
+      <h1>Exhibit Finder</h1>
       <SearchBar searchInput={searchInput}
                 setSearchInput={setSearchInput} />
                 <div className='filter-container'>
@@ -74,23 +79,33 @@ export default function MainPage() {
         </button>
       </div>
       <div className='card-container'>
-      {places.map((place, id) => (
+      {filteredPlaces.map((place, id) => {
+        //extract photo url 
+        const photoUrl = place.photos && place.photos.length > 0
+          ? place.photos[0].getUrl()
+          : '/gallery-placeholder.png';
+        // serializable place object
+        const placeObject = {
+          place_id: place.place_id,
+          name: place.name,
+          vicinity: place.vicinity,
+          location: place.location,
+          photoUrl,
+         
+        };
+        return (
           <Card
             key={place.place_id || id}
             name={place.name}
             location={place.vicinity}
-            image={place.photos && place.photos.length > 0
-              ? place.photos[0].getUrl()
-              : '/gallery-placeholder.png'}
+            image={photoUrl}
+            placeId={place.place_id}
+            place={placeObject}
           />
-          
-        ))}
-        <Card
-  name="Test Gallery"
-  location="123 Test St, New York, NY"
-  image="/gallery-placeholder.png"
-/>
-      
+        );
+      })}
+     
+
       </div>
      
 
