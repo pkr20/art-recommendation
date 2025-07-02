@@ -111,3 +111,34 @@
   box-shadow: 0 0 0 3px rgba(245, 101, 223, 0.1);
 }
 
+/* filter buttons css */
+.filter-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  border: 2px solid #f565df;
+  background-color: transparent;
+  color: #f565df;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f565df;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.filter-btn.active {
+  background-color: #f565df;
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 101, 223, 0.3);
+}
+
