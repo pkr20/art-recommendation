@@ -12,26 +12,16 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/users', async (req, res) => {
-  const users = await prisma.user.findMany();
-  res.json(users);
-});
-
-app.get('/posts', async (req, res) => {
-  const posts = await prisma.post.findMany({
-    include: { user: true },
-    orderBy: { createdAt: 'desc' }
+// favorites endpoints
+app.get('/favorites', (req, res) => {
+    res.json({ message: 'Favorites endpoint working!' });
   });
-  res.json(posts);
-});
-
-app.post('/posts', async (req, res) => {
-  const post = await prisma.post.create({
-    data: req.body,
-    include: { user: true }
+  
+  app.post('/favorites', (req, res) => {
+    res.json({ message: 'Favorite saved!' });
   });
-  res.status(201).json(post);
-});
+
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
