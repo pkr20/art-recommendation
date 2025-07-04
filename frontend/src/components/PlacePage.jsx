@@ -40,6 +40,22 @@ function PlacePage() {
     }
   }, [placeId]);
 
+
+   // favoriting a card
+   const handleFavorite = async (e) => {
+    e.stopPropagation();
+
+    try {
+        const response = await fetch('http://localhost:3000/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ placeId }),
+        });
+    } catch (err) {
+        console.log('Fetch failed:', err);
+    }
+};
+
   if (error) {
     return <div className="placepage-container">{error}</div>;
   }
@@ -51,7 +67,7 @@ function PlacePage() {
     <div className="placepage-container">
       <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
       <div className="placepage-info-panel">
-        <button >Favorite</button>
+        <button onClick={handleFavorite}>Favorite</button>
         <h1 className="placepage-title">{details.name}</h1>
         <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
       </div>
