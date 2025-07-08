@@ -202,3 +202,11 @@
   margin-bottom: 10px;
 }
 
+.unfavorite-btn {
+  background: rgb(242, 162, 242);
+  
+}
+
+.favorite-btn {
+  background: rgb(162, 242, 173);
+}

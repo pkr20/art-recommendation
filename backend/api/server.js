@@ -22,6 +22,8 @@ app.get('/favorites', async (req, res) => {
     }
 });
 
+
+//post to favorites
 app.post('/favorites', async (req, res) => {
     const { placeId } = req.body;
     try {
@@ -34,6 +36,17 @@ app.post('/favorites', async (req, res) => {
     }
 });
 
+
+//delete from favorites
+app.delete('/favorites/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.favorite.delete({ where: { id: parseInt(id) } });
+        res.json({ message: 'Favorite deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete favorite', details: error.message });
+    }
+});
 
 
 
