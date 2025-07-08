@@ -13,13 +13,27 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // favorites endpoints
-app.get('/favorites', (req, res) => {
-    res.json({ message: 'Favorites endpoint working!' });
-  });
-  
-  app.post('/favorites', (req, res) => {
-    res.json({ message: 'Favorite saved!' });
-  });
+app.get('/favorites', async (req, res) => {
+    try {
+        const favorites = await prisma.favorite.findMany();
+        res.json(favorites);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch favorites', details: error.message });
+    }
+});
+
+app.post('/favorites', async (req, res) => {
+    const { placeId } = req.body;
+    try {
+        const favorite = await prisma.favorite.create({
+            data: { placeId },
+        });
+        res.json(favorite);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save favorite', details: error.message });
+    }
+});
+
 
 
 

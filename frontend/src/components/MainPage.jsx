@@ -77,6 +77,9 @@ export default function MainPage() {
           onClick={() => setPlaceType('museum')}>
           Museums
         </button>
+        <button className='filter-btn' onClick={() => navigate('/favorites')}>
+          Favorites
+        </button>
       </div>
       <div className='card-container'>
       {filteredPlaces.map((place, id) => {
