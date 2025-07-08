@@ -68,7 +68,7 @@
   flex: 1;
   padding: 12px 16px;
   border: 2px solid #ccc;
-  border-radius: 8px;
+  border-radius: 22px;
   font-size: 16px;
   background-color: #ffffff;
   color: #213547;
@@ -209,4 +209,29 @@
 
 .favorite-btn {
   background: rgb(162, 242, 173);
+}
+
+/* header css */
+.header {
+  display: flex;
+  justify-content: center;
+  background-color: #dcb8ff;
+}
+
+.header-btn {
+  padding: 10px 20px;
+  border: 2px solid #f565df;
+  background-color: transparent;
+  color: #f565df;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  gap: 15px;
+  margin: 20px 0;
+}
+.header-btn:hover {
+  background-color: #f565df;
+  color: white;
+  transform: translateY(-2px);
 }

@@ -5,6 +5,7 @@ import SignIn from './components/SignIn';
 import MainPage from './components/MainPage';
 import PlacePage from './components/PlacePage';
 import FavoritesPage from './components/FavoritesPage';
+import Profile from './components/Profile';
 
 
 function App() {
@@ -17,6 +18,8 @@ function App() {
         <Route path='/place/:placeId' element={<PlacePage/>} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/" element={<SignIn />} />
+        <Route path="/profile" element={<Profile />} />
+
       </Routes>
 
   );
