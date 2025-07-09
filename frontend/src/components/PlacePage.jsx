@@ -15,6 +15,8 @@ function PlacePage() {
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [error, setError] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (!window.google || !window.google.maps) {
@@ -40,21 +42,55 @@ function PlacePage() {
     }
   }, [placeId]);
 
+  //fetch all favorites and set isFavorite
+  useEffect(() => {
+    fetch('http://localhost:3000/favorites')
+      .then(res => res.json())
+      .then(data => {
+        setFavorites(data);
+        setIsFavorite(data.some(fav => fav.placeId === placeId));
+      });
+  }, [placeId]);
 
-   // favoriting a card
-   const handleFavorite = async (e) => {
+  // favoriting a card only once
+  const handleFavorite = async (e) => {
     e.stopPropagation();
-
     try {
-        const response = await fetch('http://localhost:3000/favorites', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ placeId }),
-        });
+      const response = await fetch('http://localhost:3000/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId }),
+      });
+      if (response.ok) {
+        setIsFavorite(true);
+        fetch('http://localhost:3000/favorites')
+          .then(res => res.json())
+          .then(data => setFavorites(data));
+      }
     } catch (err) {
-        console.log('Fetch failed:', err);
+      console.log('Fetch failed:', err);
     }
-};
+  };
+
+  // delete from favorites by id
+  const handleDelete = async () => {
+    const favorite = favorites.find(fav => fav.placeId === placeId);
+    if (!favorite) {
+      alert('Favorite not found!');
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:3000/favorites/${favorite.id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setIsFavorite(false);
+        setFavorites(favorites.filter(fav => fav.id !== favorite.id));
+      }
+    } catch (err) {
+      console.log('Fetch failed:', err);
+    }
+  };
 
   if (error) {
     return <div className="placepage-container">{error}</div>;
@@ -67,7 +103,11 @@ function PlacePage() {
     <div className="placepage-container">
       <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
       <div className="placepage-info-panel">
-        <button onClick={handleFavorite}>Favorite</button>
+        {isFavorite ? (
+          <button className="unfavorite-btn" onClick={handleDelete}>Unfavorite ♥ </button>
+        ) : (
+          <button className="favorite-btn" onClick={handleFavorite}>Favorite ♡ </button>
+        )}
         <h1 className="placepage-title">{details.name}</h1>
         <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
       </div>

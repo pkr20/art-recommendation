@@ -5,6 +5,7 @@ import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
 import SearchBar from './SearchBar';
 import { useState } from 'react';
+import Header from './Header';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -64,10 +65,9 @@ export default function MainPage() {
 
   return (
     <div className='main-page-container'>
-      <h1>Exhibit Finder</h1>
-      <SearchBar searchInput={searchInput}
-                setSearchInput={setSearchInput} />
-                <div className='filter-container'>
+      <Header searchInput={searchInput} setSearchInput={setSearchInput} />
+
+        <div className='filter-container'>
 
         <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
           onClick={() => setPlaceType('art_gallery')}>

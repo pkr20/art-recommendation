@@ -88,7 +88,7 @@ export default function FavoritesPage() {
             Loading favorites...
           </div>
         ) : favoritePlaces.length === 0 ? (
-          <div >
+          <div className='no-favorites' style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#666' }}>
             No favorites yet. Add some places to your favorites!
           </div>
         ) : (
