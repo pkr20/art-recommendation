@@ -15,7 +15,6 @@ function PlacePage() {
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [error, setError] = useState(null);
-  const [favorites, setFavorites] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -42,14 +41,13 @@ function PlacePage() {
     }
   }, [placeId]);
 
-  //fetch all favorites and set isFavorite
+  //set isFavorite
   useEffect(() => {
-    fetch('http://localhost:3000/favorites')
+    fetch(`http://localhost:3000/favorites/${placeId}`)
       .then(res => res.json())
-      .then(data => {
-        setFavorites(data);
-        setIsFavorite(data.some(fav => fav.placeId === placeId));
-      });
+      .then(data => 
+        setIsFavorite(data.isFavorite)
+      );
   }, [placeId]);
 
   // favoriting a card only once
@@ -63,32 +61,23 @@ function PlacePage() {
       });
       if (response.ok) {
         setIsFavorite(true);
-        fetch('http://localhost:3000/favorites')
-          .then(res => res.json())
-          .then(data => setFavorites(data));
       }
     } catch (err) {
-      console.log('Fetch failed:', err);
+      console.error('Fetch failed:', err);
     }
   };
 
-  // delete from favorites by id
-  const handleDelete = async () => {
-    const favorite = favorites.find(fav => fav.placeId === placeId);
-    if (!favorite) {
-      alert('Favorite not found!');
-      return;
-    }
+  // delete from favorites by placeId
+  const handleUnfavorite = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/favorites/${favorite.id}`, {
+      const response = await fetch(`http://localhost:3000/favorites/${placeId}`, {
         method: 'DELETE',
       });
       if (response.ok) {
         setIsFavorite(false);
-        setFavorites(favorites.filter(fav => fav.id !== favorite.id));
       }
     } catch (err) {
-      console.log('Fetch failed:', err);
+      console.error('Fetch failed:', err);
     }
   };
 
@@ -104,7 +93,7 @@ function PlacePage() {
       <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
       <div className="placepage-info-panel">
         {isFavorite ? (
-          <button className="unfavorite-btn" onClick={handleDelete}>Unfavorite ♥ </button>
+          <button className="unfavorite-btn" onClick={handleUnfavorite}>Unfavorite ♥ </button>
         ) : (
           <button className="favorite-btn" onClick={handleFavorite}>Favorite ♡ </button>
         )}

@@ -235,3 +235,30 @@
   color: white;
   transform: translateY(-2px);
 }
+
+/* profile css */
+.profile-input-editor {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.profile-btn { 
+  padding: 3px 12px;
+  border: 2px solid #f565df;
+  background-color: transparent;
+  color: #f565df;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+}
+.profile-btn:hover {
+  background-color: #f565df;
+  color: white;
+  transform: translateY(-2px);
+}
+
