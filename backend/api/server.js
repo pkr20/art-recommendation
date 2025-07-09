@@ -36,12 +36,22 @@ app.post('/favorites', async (req, res) => {
     }
 });
 
+// GET check if a place is a favorite
+app.get('/favorites/:placeId', async (req, res) => {
+    const { placeId } = req.params;
+    try {
+        const favorite = await prisma.favorite.findUnique({ where: { placeId } });
+        res.json({ isFavorite: !!favorite });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to check favorite', details: error.message });
+    }
+});
 
 //delete from favorites
-app.delete('/favorites/:id', async (req, res) => {
-    const { id } = req.params;
+app.delete('/favorites/:placeId', async (req, res) => {
+    const { placeId } = req.params;
     try {
-        await prisma.favorite.delete({ where: { id: parseInt(id) } });
+        await prisma.favorite.delete({ where: { placeId } });
         res.json({ message: 'Favorite deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete favorite', details: error.message });
