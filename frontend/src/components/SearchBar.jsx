@@ -1,14 +1,20 @@
 import { useState } from 'react';
 
 export default function SearchBar({ searchInput, setSearchInput }) {
+    const [suggestions, setSuggestions] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+
     // handles form submission
     const handleSubmit = (e) => {
         e.preventDefault();
+        setShowDropdown(false);
     }
 
     // handles clear
     const handleClear = () => {
         setSearchInput('');
+        setSuggestions([]);
+        setShowDropdown(false);
     }
 
     return (
