@@ -43,7 +43,10 @@ export default function RecommendedPage() {
                     if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
                         setPlaces(results);
                     }
-                    setLoading(false);
+                    //add 3 second delay before hiding loading
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 3000);
                 });
             }
         };
@@ -105,7 +108,10 @@ export default function RecommendedPage() {
             </div>
             <div className='card-container'>
                 {loading ? (
-                    <div>Loading recommendations...</div>
+                    <div className="loading-container">
+                        <h2>Loading...</h2>
+                        <p>Finding the best art galleries for you</p>
+                    </div>
                 ) : filteredPlaces.length === 0 ? (
                     <div>No recommendations found.</div>
                 ) : (
