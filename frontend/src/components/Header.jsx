@@ -10,6 +10,7 @@ export default function Header({searchInput, setSearchInput}) {
             <button className='header-btn' onClick={() => navigate('/signin')}>Sign In</button>
             <button className='header-btn' onClick={() => navigate('/favorites')}>Favorites</button>
             <button className='header-btn' onClick={() => navigate('/profile')}>Profile</button>
+            <button className='header-btn' onClick={() => navigate('/recommended')}>Recommended</button>
         </div>
     )
 }
