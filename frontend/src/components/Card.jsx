@@ -20,5 +20,4 @@ function Card({name, location, image, placeId, place}) {
         </div>
     );
 }
-
 export default Card;
