@@ -47,10 +47,10 @@
 
 /* card css */
 .card {
-  border: 2px solid #e0e0e0;
+  border: 2px solid;
   border-radius: 8px;
-  padding: 16px;
-  max-width: 300px;
+  padding: 24px;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(60,60,60,0.06);
   transition: all 0.3s ease;
   cursor: pointer;
