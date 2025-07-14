@@ -94,6 +94,32 @@ export default function MainPage() {
     (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
   );
 
+  // helper function to render a Card for a place
+  function renderPlaceCard(place, id) {
+    //extract photo url 
+    const photoUrl = place.photos && place.photos.length > 0
+      ? place.photos[0].getUrl()
+      : '/gallery-placeholder.png';
+    // serializable place object
+    const placeObject = {
+      place_id: place.place_id,
+      name: place.name,
+      vicinity: place.vicinity,
+      location: place.location,
+      photoUrl,
+    };
+    return (
+      <Card
+        key={place.place_id || id}
+        name={place.name}
+        location={place.vicinity}
+        image={photoUrl}
+        placeId={place.place_id}
+        place={placeObject}
+      />
+    );
+  }
+
   return (
     <div className='main-page-container'>
       <Header searchInput={searchInput} setSearchInput={setSearchInput} />
@@ -180,30 +206,7 @@ export default function MainPage() {
 
         {viewMode === 'list' && (
           <div className='card-container'>
-            {filteredPlaces.map((place, id) => {
-              //extract photo url 
-              const photoUrl = place.photos && place.photos.length > 0
-                ? place.photos[0].getUrl()
-                : '/gallery-placeholder.png';
-              // serializable place object
-              const placeObject = {
-                place_id: place.place_id,
-                name: place.name,
-                vicinity: place.vicinity,
-                location: place.location,
-                photoUrl,
-              };
-              return (
-                <Card
-                  key={place.place_id || id}
-                  name={place.name}
-                  location={place.vicinity}
-                  image={photoUrl}
-                  placeId={place.place_id}
-                  place={placeObject}
-                />
-              );
-            })}
+            {filteredPlaces.map(renderPlaceCard)}
           </div>
         )}
       </div>
