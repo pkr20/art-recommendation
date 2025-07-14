@@ -13,7 +13,10 @@ export default function MainPage() {
   const [placeType, setPlaceType] = useState('art_gallery');
   const [viewMode, setViewMode] = useState('list'); // list or map
 
-  const location = { lat: 40.7128, lng: -74.0060 };
+  // User location state
+  const [location, setLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(true);
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -29,8 +32,33 @@ export default function MainPage() {
     }
   };
 
+  // get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLoadingLocation(false);
+        },
+        (error) => {
+          setLocationError('Unable to retrieve your location.');
+          setLocation({ lat: 40.7128, lng: -74.0060 }); // fallback to NYC
+          setLoadingLocation(false);
+        }
+      );
+    } else {
+      setLocationError('Location is not supported.');
+      setLocation({ lat: 40.7128, lng: -74.0060 }); // fallback to NYC
+      setLoadingLocation(false);
+    }
+  }, []);
+
   //gets the google maps API information for nearby locations to render
   useEffect(() => {
+    if (!location) return;
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
@@ -58,7 +86,7 @@ export default function MainPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [placeType]);
+  }, [placeType, location]);
 
   // map creating marker logic
   useEffect(() => {
@@ -122,6 +150,11 @@ export default function MainPage() {
 
   return (
     <div className='main-page-container'>
+      {loadingLocation ? (
+        <div>Loading your location...</div>
+      ) : locationError ? (
+        <div>{locationError}</div>
+      ) : null}
       <Header searchInput={searchInput} setSearchInput={setSearchInput} />
 
       <div className="hero-section">
