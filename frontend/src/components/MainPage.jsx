@@ -98,69 +98,123 @@ export default function MainPage() {
     <div className='main-page-container'>
       <Header searchInput={searchInput} setSearchInput={setSearchInput} />
 
-        <div className='filter-container'>
+      <div className="hero-section">
+        <h1>Discover Amazing Art Galleries</h1>
+        <p>Find the best art galleries, museums, and cultural spaces near you. Get personalized recommendations and explore the vibrant art scene in your area.</p>
+        <div className="hero-buttons">
+          <button className="hero-button1" onClick={() => navigate('/recommended')}>
+            Get Personalized Recommendations
+          </button>
+          <button className="hero-button2" onClick={() => setViewMode('list')}>
+            Browse All Galleries
+          </button>
+        </div>
+      </div>
 
-        <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
-          onClick={() => setPlaceType('art_gallery')}>
-          Art Galleries
-        </button>
-        <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
-          onClick={() => setPlaceType('museum')}>
-          Museums
-        </button>
-        <button className='filter-btn' onClick={() => navigate('/favorites')}>
-          Favorites
+ 
+      <div className="features-section">
+        <h2>Why Explore ArtBase?</h2>
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">🎨</div>
+            <h3>Personalized Recommendations</h3>
+            <p>Get art gallery suggestions tailored to your preferences and location</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">📍</div>
+            <h3>Location-Based Search</h3>
+            <p>Find galleries near you with real-time location detection</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">⭐</div>
+            <h3>Curated Collections</h3>
+            <p>Discover the best exhibitions and art events in your area</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">💾</div>
+            <h3>Save Your Favorites</h3>
+            <p>Keep track of galleries you love and want to visit</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div className="browser-section">
+        <h2>Explore Local Art Scene</h2>
+        <p>Browse through art galleries and museums in your area</p>
+        
+        <div className='filter-container'>
+          <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
+            onClick={() => setPlaceType('art_gallery')}>
+            Art Galleries
+          </button>
+          <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
+            onClick={() => setPlaceType('museum')}>
+            Museums
+          </button>
+          <button className='filter-btn' onClick={() => navigate('/favorites')}>
+            Favorites
+          </button>
+        </div>
+
+        <div className='map-toggle-container'>
+          <button
+            className={`filter-btn${viewMode === 'list' ? ' active' : ''}`}
+            onClick={() => setViewMode('list')}
+          >List View</button>
+          <button
+            className={`filter-btn${viewMode === 'map' ? ' active' : ''}`}
+            onClick={() => setViewMode('map')}>Map View</button>
+        </div>
+
+        {viewMode === 'map' && (
+          <div className='map-view-container'>
+            <h3>Map View</h3>
+            <div
+              id="map"
+              ref={mapRef}
+              style={{ width: '100%', height: '600px' }}
+            />
+          </div>
+        )}
+
+        {viewMode === 'list' && (
+          <div className='card-container'>
+            {filteredPlaces.map((place, id) => {
+              //extract photo url 
+              const photoUrl = place.photos && place.photos.length > 0
+                ? place.photos[0].getUrl()
+                : '/gallery-placeholder.png';
+              // serializable place object
+              const placeObject = {
+                place_id: place.place_id,
+                name: place.name,
+                vicinity: place.vicinity,
+                location: place.location,
+                photoUrl,
+              };
+              return (
+                <Card
+                  key={place.place_id || id}
+                  name={place.name}
+                  location={place.vicinity}
+                  image={photoUrl}
+                  placeId={place.place_id}
+                  place={placeObject}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+
+      <div className="footer-section">
+        <p>Ready to explore? Start your art journey today!</p>
+        <button className="hero-button1" onClick={() => navigate('/recommended')}>
+          Get Started
         </button>
       </div>
-      <div className='map-toggle-container'>
-        <button
-          className={`filter-btn${viewMode === 'list' ? ' active' : ''}`}
-          onClick={() => setViewMode('list')}
-        >List View</button>
-        <button
-          className={`filter-btn${viewMode === 'map' ? ' active' : ''}`}
-          onClick={() => setViewMode('map')}>Map View</button>
-      </div>
-      {viewMode === 'map' && (
-        <div className='map-view-container'>
-          <h2>Map View</h2>
-          <div
-            id="map"
-            ref={mapRef}
-            style={{ width: '100%', height: '800px' }}
-          />
-        </div>
-      )}
-      {viewMode === 'list' && (
-        <div className='card-container'>
-          {filteredPlaces.map((place, id) => {
-            //extract photo url 
-            const photoUrl = place.photos && place.photos.length > 0
-              ? place.photos[0].getUrl()
-              : '/gallery-placeholder.png';
-            // serializable place object
-            const placeObject = {
-              place_id: place.place_id,
-              name: place.name,
-              vicinity: place.vicinity,
-              location: place.location,
-              photoUrl,
-            };
-            return (
-              <Card
-                key={place.place_id || id}
-                name={place.name}
-                location={place.vicinity}
-                image={photoUrl}
-                placeId={place.place_id}
-                place={placeObject}
-              />
-            );
-          })}
-        </div>
-      )}
-      <p>You have successfully signed in.</p>
-      <button onClick={handleSignOut}>Sign Out</button>
     </div>
   );
 }
