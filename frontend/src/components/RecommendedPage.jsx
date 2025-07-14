@@ -21,11 +21,35 @@ export default function RecommendedPage() {
     const [places, setPlaces] = useState([]);
     const [recommendedPlaces, setRecommendedPlaces] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [userLocation, setUserLocation] = useState(null);
+    const [locationError, setLocationError] = useState(null);
 
-    // example location TODO: change later
-    const userLocation = { lat: 40.7128, lng: -74.0060 };
+    //get user's actual location
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    setLocationError('Unable to get your location. Using default location.');
+                    //if cannot get user location
+                    setUserLocation({ lat: 40.7128, lng: -74.0060 });
+                }
+            );
+        } else {
+            setLocationError('Location is not supported by this browser. Using default location.');
+            setUserLocation({ lat: 40.7128, lng: -74.0060 });
+        }
+    }, []);
 
     useEffect(() => {
+        if (!userLocation) return; // Wait for location to be set
+        
         setLoading(true);
         const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -43,7 +67,10 @@ export default function RecommendedPage() {
                     if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
                         setPlaces(results);
                     }
-                    setLoading(false);
+                    //add 3 second delay before hiding loading
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 3000);
                 });
             }
         };
@@ -51,7 +78,7 @@ export default function RecommendedPage() {
         return () => {
             document.body.removeChild(script);
         };
-    }, []);
+    }, [userLocation]); 
 
     // recommendation algorithm: score and sort after places are loaded
     useEffect(() => {
@@ -98,6 +125,16 @@ export default function RecommendedPage() {
         <div className='main-page-container'>
             <Header searchInput={searchInput} setSearchInput={setSearchInput} />
             <h1>Recommended For You</h1>
+            {locationError && (
+                <div className="location-notice">
+                    <p>{locationError}</p>
+                </div>
+            )}
+            {userLocation && !locationError && (
+                <div className="location-notice">
+                    <p>📍 Finding galleries near your location</p>
+                </div>
+            )}
             <div className='filter-container'>
                 <button className='filter-btn' onClick={() => navigate('/main')}>
                     ← Back to Main
@@ -105,7 +142,10 @@ export default function RecommendedPage() {
             </div>
             <div className='card-container'>
                 {loading ? (
-                    <div>Loading recommendations...</div>
+                    <div className="loading-container">
+                        <h2>Loading...</h2>
+                        <p>Finding the best art galleries for you</p>
+                    </div>
                 ) : filteredPlaces.length === 0 ? (
                     <div>No recommendations found.</div>
                 ) : (
