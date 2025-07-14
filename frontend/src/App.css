@@ -47,15 +47,16 @@
 
 /* card css */
 .card {
-  border: 2px solid #e0e0e0;
+  border: 2px solid;
   border-radius: 8px;
-  padding: 16px;
-  max-width: 300px;
+  padding: 24px;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(60,60,60,0.06);
   transition: all 0.3s ease;
   cursor: pointer;
   background: #fafafa;
 }
+
 
 .card:hover {
   transform: translateY(-5px);
@@ -66,10 +67,40 @@
 .card-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 20px;
+  gap: 20px;
   align-items: stretch;
+  padding: 20px;
 }
 
+/* grid adjustments */
+@media (max-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .card-container {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+
+.card img {
+  height: 600px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
 /* search bar css */
 .search-bar {
   width: 100%;
