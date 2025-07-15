@@ -18,6 +18,10 @@ export default function MainPage() {
   const [locationError, setLocationError] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(true);
 
+  // search history and user interaction tracking
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [userInteractions, setUserInteractions] = useState({});
+
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
@@ -30,6 +34,76 @@ export default function MainPage() {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  // load search history from localStorage on mount
+  useEffect(() => {
+    // retrieve saved search history and user interactions from localStorage (if any)
+    const savedHistory = localStorage.getItem('artBase_searchHistory');
+    const savedInteractions = localStorage.getItem('artBase_userInteractions');
+    if (savedHistory) {
+      setSearchHistory(JSON.parse(savedHistory));
+    }
+    if (savedInteractions) {
+      setUserInteractions(JSON.parse(savedInteractions));
+    }
+  }, []);
+
+  // save search query to history
+  const saveSearchQuery = (query, results, placeType) => {
+    if (!query.trim()) return;
+    
+    // create a new search entry object
+    const searchEntry = {
+      query: query.toLowerCase(),
+      placeType,
+      timestamp: new Date().toISOString(),
+    };
+    
+    //add new entry to the front, remove duplicates, and keep only the last 50
+    const updatedHistory = [searchEntry, ...searchHistory.filter(h => h.query !== query.toLowerCase())].slice(0, 50); // keep last 50 searches
+    setSearchHistory(updatedHistory);
+    localStorage.setItem('artBase_searchHistory', JSON.stringify(updatedHistory)); //persist to localStorage
+  };
+
+  // track user interaction with a place
+  const trackUserInteraction = (placeId, interactionType) => {
+    const timestamp = new Date().toISOString();
+    const updatedInteractions = {
+      ...userInteractions,
+      [placeId]: {
+        ...userInteractions[placeId],
+        [interactionType]: timestamp,
+        lastInteraction: timestamp,
+      }
+    };
+    
+    //update state and persist to localStorage
+    setUserInteractions(updatedInteractions);
+    localStorage.setItem('artBase_userInteractions', JSON.stringify(updatedInteractions));
+  };
+
+  // get user's most searched terms
+  const getUserMostSearched = () => {
+    const queryCounts = {};
+    searchHistory.forEach(entry => {
+      queryCounts[entry.query] = (queryCounts[entry.query] || 0) + 1;
+    });
+    return Object.entries(queryCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([query]) => query);
+  };
+
+  // get user's preferred place types
+  const getUserPreferredPlaceTypes = () => {
+    const typeCounts = {};
+    searchHistory.forEach(entry => {
+      typeCounts[entry.placeType] = (typeCounts[entry.placeType] || 0) + 1;
+    });
+    return Object.entries(typeCounts)
+      .sort(([,a], [,b]) => b - a)
+      .map(([type]) => type);
   };
 
   // get user location on mount
@@ -77,6 +151,10 @@ export default function MainPage() {
           service.nearbySearch(request, (results, status) => {
             if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
               setPlaces(results);
+              //saves the user's search input, the results, and the place type to history
+              if (searchInput.trim()) {
+                saveSearchQuery(searchInput, results, placeType);
+              }
             }
           });
         }
@@ -86,7 +164,7 @@ export default function MainPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [placeType, location]);
+  }, [placeType, location, searchInput]);
 
   // map creating marker logic
   useEffect(() => {
@@ -144,6 +222,8 @@ export default function MainPage() {
         image={photoUrl}
         placeId={place.place_id}
         place={placeObject}
+        // track when a user clicks/views a card
+        onCardClick={() => trackUserInteraction(place.place_id, 'viewed')}
       />
     );
   }
@@ -158,7 +238,7 @@ export default function MainPage() {
       <Header searchInput={searchInput} setSearchInput={setSearchInput} />
 
       <div className="hero-section">
-        <h1>Discover Amazing Art Galleries</h1>
+        <h1>Discover Amazing Art Scenes</h1>
         <p>Find the best art galleries, museums, and cultural spaces near you. Get personalized recommendations and explore the vibrant art scene in your area.</p>
         <div className="hero-buttons">
           <button className="hero-button1" onClick={() => navigate('/recommended')}>
