@@ -93,34 +93,56 @@ export default function RecommendedPage() {
         const maxPrice = 4;
         const maxRating = 5;
 
-        // get user's preferred type from localStorage (MainPage.jsx keeps track)
-        function getUserPreferredType() {
-            const interactions = JSON.parse(localStorage.getItem('artBase_userInteractions') || '{}');
-            const typeCounts = { art_gallery: 0, museum: 0 };
-            Object.keys(interactions).forEach(placeId => {
-                // find the place in the current places array
-                const place = places.find(p => p.place_id === placeId);
-                if (place && place.types) {
-                    if (place.types.includes('art_gallery')) typeCounts.art_gallery += 1;
-                    if (place.types.includes('museum')) typeCounts.museum += 1;
-                }
-            });
-            // default to art_gallery if tied or none
-            return typeCounts.art_gallery >= typeCounts.museum ? 'art_gallery' : 'museum';
-        }
-
-        const preferredType = getUserPreferredType();
+        //get favorite place IDs from localStorage
+        const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+        //get viewed place IDs from localStorage
+        const interactions = JSON.parse(localStorage.getItem('artBase_userInteractions') || '{}');
+        const viewedIds = Object.keys(interactions);
+        // count types in both favorited and viewed places, with favorited counting double
+        const typeCounts = {};
+        // count favorited places (weight = 2)
+        favorites.forEach(id => {
+            const place = places.find(p => p.place_id === id);
+            if (place && place.types) {
+                place.types.forEach(type => {
+                    if (type === 'art_gallery' || type === 'museum') {
+                        typeCounts[type] = (typeCounts[type] || 0) + 2;
+                    }
+                });
+            }
+        });
+        // count viewed places (weight = 1, but don't double-count favorites)
+        viewedIds.forEach(id => {
+            if (favorites.includes(id)) return; // already counted as favorite
+            const place = places.find(p => p.place_id === id);
+            if (place && place.types) {
+                place.types.forEach(type => {
+                    if (type === 'art_gallery' || type === 'museum') {
+                        typeCounts[type] = (typeCounts[type] || 0) + 1;
+                    }
+                });
+            }
+        });
+        // calculate total normalization
+        const totalTypeCount = Object.values(typeCounts).reduce((a, b) => a + b, 0);
 
         const scoredPlaces = places.map(place => {
             const distance = place.geometry.location ? 
-            calculateDistance(userLocation, place.geometry.location) : maxDistance;
-            const isFavorite = false // always false for now
+                calculateDistance(userLocation, place.geometry.location) : maxDistance;
             const distanceScore = 1 - (distance / maxDistance);
             const priceScore = place.price_level !== undefined ? (1 - (place.price_level / maxPrice)) : 0.5;
             const ratingScore = place.rating !== undefined ? (place.rating / maxRating) : 0.3;
-            const favoriteScore = isFavorite ? 0 : 1; //favorites are rated lower so user can try new places
-            //if place type matches user history
-            const typeScore = (place.types && place.types.includes(preferredType)) ? TYPE_WEIGHT : 0; 
+            // type score: proportional to how often this type appears in favorites or views
+            let typeScore = 0;
+            if (place.types) {
+                typeScore = place.types.reduce((acc, type) => {
+                    if (typeCounts[type] && totalTypeCount > 0) {
+                        return acc + typeCounts[type] / totalTypeCount;
+                    }
+                    return acc;
+                }, 0);
+                typeScore = Math.min(typeScore, 1.0);
+            }
             const rankScore =
                 DISTANCE_WEIGHT * distanceScore +
                 PRICE_WEIGHT * priceScore +
