@@ -13,7 +13,14 @@ export default function MainPage() {
   const [placeType, setPlaceType] = useState('art_gallery');
   const [viewMode, setViewMode] = useState('list'); // list or map
 
-  const location = { lat: 40.7128, lng: -74.0060 };
+  // User location state
+  const [location, setLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(true);
+
+  // search history and user interaction tracking
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [userInteractions, setUserInteractions] = useState({});
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -29,8 +36,103 @@ export default function MainPage() {
     }
   };
 
+  // load search history from localStorage on mount
+  useEffect(() => {
+    // retrieve saved search history and user interactions from localStorage (if any)
+    const savedHistory = localStorage.getItem('artBase_searchHistory');
+    const savedInteractions = localStorage.getItem('artBase_userInteractions');
+    if (savedHistory) {
+      setSearchHistory(JSON.parse(savedHistory));
+    }
+    if (savedInteractions) {
+      setUserInteractions(JSON.parse(savedInteractions));
+    }
+  }, []);
+
+  // save search query to history
+  const saveSearchQuery = (query, results, placeType) => {
+    if (!query.trim()) return;
+    
+    // create a new search entry object
+    const searchEntry = {
+      query: query.toLowerCase(),
+      placeType,
+      timestamp: new Date().toISOString(),
+    };
+    
+    //add new entry to the front, remove duplicates, and keep only the last 50
+    const updatedHistory = [searchEntry, ...searchHistory.filter(h => h.query !== query.toLowerCase())].slice(0, 50); // keep last 50 searches
+    setSearchHistory(updatedHistory);
+    localStorage.setItem('artBase_searchHistory', JSON.stringify(updatedHistory)); //persist to localStorage
+  };
+
+  // track user interaction with a place
+  const trackUserInteraction = (placeId, interactionType) => {
+    const timestamp = new Date().toISOString();
+    const updatedInteractions = {
+      ...userInteractions,
+      [placeId]: {
+        ...userInteractions[placeId],
+        [interactionType]: timestamp,
+        lastInteraction: timestamp,
+      }
+    };
+    
+    //update state and persist to localStorage
+    setUserInteractions(updatedInteractions);
+    localStorage.setItem('artBase_userInteractions', JSON.stringify(updatedInteractions));
+  };
+
+  // get user's most searched terms
+  const getUserMostSearched = () => {
+    const queryCounts = {};
+    searchHistory.forEach(entry => {
+      queryCounts[entry.query] = (queryCounts[entry.query] || 0) + 1;
+    });
+    return Object.entries(queryCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([query]) => query);
+  };
+
+  // get user's preferred place types
+  const getUserPreferredPlaceTypes = () => {
+    const typeCounts = {};
+    searchHistory.forEach(entry => {
+      typeCounts[entry.placeType] = (typeCounts[entry.placeType] || 0) + 1;
+    });
+    return Object.entries(typeCounts)
+      .sort(([,a], [,b]) => b - a)
+      .map(([type]) => type);
+  };
+
+  // get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLoadingLocation(false);
+        },
+        (error) => {
+          setLocationError('Unable to retrieve your location.');
+          setLocation({ lat: 40.7128, lng: -74.0060 }); // fallback to NYC
+          setLoadingLocation(false);
+        }
+      );
+    } else {
+      setLocationError('Location is not supported.');
+      setLocation({ lat: 40.7128, lng: -74.0060 }); // fallback to NYC
+      setLoadingLocation(false);
+    }
+  }, []);
+
   //gets the google maps API information for nearby locations to render
   useEffect(() => {
+    if (!location) return;
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
@@ -49,6 +151,10 @@ export default function MainPage() {
           service.nearbySearch(request, (results, status) => {
             if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
               setPlaces(results);
+              //saves the user's search input, the results, and the place type to history
+              if (searchInput.trim()) {
+                saveSearchQuery(searchInput, results, placeType);
+              }
             }
           });
         }
@@ -58,7 +164,7 @@ export default function MainPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [placeType]);
+  }, [placeType, location, searchInput]);
 
   // map creating marker logic
   useEffect(() => {
@@ -94,73 +200,137 @@ export default function MainPage() {
     (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
   );
 
+  // helper function to render a Card for a place
+  function renderPlaceCard(place, id) {
+    //extract photo url 
+    const photoUrl = place.photos && place.photos.length > 0
+      ? place.photos[0].getUrl()
+      : '/gallery-placeholder.png';
+    // serializable place object
+    const placeObject = {
+      place_id: place.place_id,
+      name: place.name,
+      vicinity: place.vicinity,
+      location: place.location,
+      photoUrl,
+    };
+    return (
+      <Card
+        key={place.place_id || id}
+        name={place.name}
+        location={place.vicinity}
+        image={photoUrl}
+        placeId={place.place_id}
+        place={placeObject}
+        // track when a user clicks/views a card
+        onCardClick={() => trackUserInteraction(place.place_id, 'viewed')}
+      />
+    );
+  }
+
   return (
     <div className='main-page-container'>
+      {loadingLocation ? (
+        <div>Loading your location...</div>
+      ) : locationError ? (
+        <div>{locationError}</div>
+      ) : null}
       <Header searchInput={searchInput} setSearchInput={setSearchInput} />
 
-        <div className='filter-container'>
+      <div className="hero-section">
+        <h1>Discover Amazing Art Scenes</h1>
+        <p>Find the best art galleries, museums, and cultural spaces near you. Get personalized recommendations and explore the vibrant art scene in your area.</p>
+        <div className="hero-buttons">
+          <button className="hero-button1" onClick={() => navigate('/recommended')}>
+            Get Personalized Recommendations
+          </button>
+          <button className="hero-button2" onClick={() => setViewMode('list')}>
+            Browse All Galleries
+          </button>
+        </div>
+      </div>
 
-        <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
-          onClick={() => setPlaceType('art_gallery')}>
-          Art Galleries
-        </button>
-        <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
-          onClick={() => setPlaceType('museum')}>
-          Museums
-        </button>
-        <button className='filter-btn' onClick={() => navigate('/favorites')}>
-          Favorites
+ 
+      <div className="features-section">
+        <h2>Why Explore ArtBase?</h2>
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">🎨</div>
+            <h3>Personalized Recommendations</h3>
+            <p>Get art gallery suggestions tailored to your preferences and location</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">📍</div>
+            <h3>Location-Based Search</h3>
+            <p>Find galleries near you with real-time location detection</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">⭐</div>
+            <h3>Curated Collections</h3>
+            <p>Discover the best exhibitions and art events in your area</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">💾</div>
+            <h3>Save Your Favorites</h3>
+            <p>Keep track of galleries you love and want to visit</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div className="browser-section">
+        <h2>Explore Local Art Scene</h2>
+        <p>Browse through art galleries and museums in your area</p>
+        
+        <div className='filter-container'>
+          <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
+            onClick={() => setPlaceType('art_gallery')}>
+            Art Galleries
+          </button>
+          <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
+            onClick={() => setPlaceType('museum')}>
+            Museums
+          </button>
+          <button className='filter-btn' onClick={() => navigate('/favorites')}>
+            Favorites
+          </button>
+        </div>
+
+        <div className='map-toggle-container'>
+          <button
+            className={`filter-btn${viewMode === 'list' ? ' active' : ''}`}
+            onClick={() => setViewMode('list')}
+          >List View</button>
+          <button
+            className={`filter-btn${viewMode === 'map' ? ' active' : ''}`}
+            onClick={() => setViewMode('map')}>Map View</button>
+        </div>
+
+        {viewMode === 'map' && (
+          <div className='map-view-container'>
+            <h3>Map View</h3>
+            <div
+              id="map"
+              ref={mapRef}
+              style={{ width: '100%', height: '600px' }}
+            />
+          </div>
+        )}
+
+        {viewMode === 'list' && (
+          <div className='card-container'>
+            {filteredPlaces.map(renderPlaceCard)}
+          </div>
+        )}
+      </div>
+
+
+      <div className="footer-section">
+        <p>Ready to explore? Start your art journey today!</p>
+        <button className="hero-button1" onClick={() => navigate('/recommended')}>
+          Get Started
         </button>
       </div>
-      <div className='map-toggle-container'>
-        <button
-          className={`filter-btn${viewMode === 'list' ? ' active' : ''}`}
-          onClick={() => setViewMode('list')}
-        >List View</button>
-        <button
-          className={`filter-btn${viewMode === 'map' ? ' active' : ''}`}
-          onClick={() => setViewMode('map')}>Map View</button>
-      </div>
-      {viewMode === 'map' && (
-        <div className='map-view-container'>
-          <h2>Map View</h2>
-          <div
-            id="map"
-            ref={mapRef}
-            style={{ width: '100%', height: '800px' }}
-          />
-        </div>
-      )}
-      {viewMode === 'list' && (
-        <div className='card-container'>
-          {filteredPlaces.map((place, id) => {
-            //extract photo url 
-            const photoUrl = place.photos && place.photos.length > 0
-              ? place.photos[0].getUrl()
-              : '/gallery-placeholder.png';
-            // serializable place object
-            const placeObject = {
-              place_id: place.place_id,
-              name: place.name,
-              vicinity: place.vicinity,
-              location: place.location,
-              photoUrl,
-            };
-            return (
-              <Card
-                key={place.place_id || id}
-                name={place.name}
-                location={place.vicinity}
-                image={photoUrl}
-                placeId={place.place_id}
-                place={placeObject}
-              />
-            );
-          })}
-        </div>
-      )}
-      <p>You have successfully signed in.</p>
-      <button onClick={handleSignOut}>Sign Out</button>
     </div>
   );
 }

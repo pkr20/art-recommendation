@@ -1,11 +1,16 @@
 import React from 'react'
 import {useNavigate} from 'react-router-dom'
 
-function Card({name, location, image, placeId, place}) {
+function Card({name, location, image, placeId, place, onCardClick}) {
     const navigate = useNavigate();
 
     //when  clicking on the card, navigates to a new page
     const handleClick = () => {
+        // track user interaction if callback provided
+        if (onCardClick) {
+            onCardClick();
+        }
+        
         if (placeId) {
             navigate(`/place/${placeId}`, {state: {place}});
         }
