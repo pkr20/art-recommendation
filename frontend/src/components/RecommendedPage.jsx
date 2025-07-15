@@ -87,14 +87,29 @@ export default function RecommendedPage() {
         const DISTANCE_WEIGHT = 0.3;
         const PRICE_WEIGHT = 0.25;
         const RATING_WEIGHT = 0.2;
-        const FAVORITE_WEIGHT = 0.15;
+        const TYPE_WEIGHT = 0.2; 
 
         const maxDistance = 50000; 
         const maxPrice = 4;
         const maxRating = 5;
 
-        // TODO: favorites logic
-        const favorites = [];
+        // get user's preferred type from localStorage (MainPage.jsx keeps track)
+        function getUserPreferredType() {
+            const interactions = JSON.parse(localStorage.getItem('artBase_userInteractions') || '{}');
+            const typeCounts = { art_gallery: 0, museum: 0 };
+            Object.keys(interactions).forEach(placeId => {
+                // find the place in the current places array
+                const place = places.find(p => p.place_id === placeId);
+                if (place && place.types) {
+                    if (place.types.includes('art_gallery')) typeCounts.art_gallery += 1;
+                    if (place.types.includes('museum')) typeCounts.museum += 1;
+                }
+            });
+            // default to art_gallery if tied or none
+            return typeCounts.art_gallery >= typeCounts.museum ? 'art_gallery' : 'museum';
+        }
+
+        const preferredType = getUserPreferredType();
 
         const scoredPlaces = places.map(place => {
             const distance = place.geometry.location ? 
@@ -104,11 +119,13 @@ export default function RecommendedPage() {
             const priceScore = place.price_level !== undefined ? (1 - (place.price_level / maxPrice)) : 0.5;
             const ratingScore = place.rating !== undefined ? (place.rating / maxRating) : 0.3;
             const favoriteScore = isFavorite ? 0 : 1; //favorites are rated lower so user can try new places
+            //if place type matches user history
+            const typeScore = (place.types && place.types.includes(preferredType)) ? TYPE_WEIGHT : 0; 
             const rankScore =
                 DISTANCE_WEIGHT * distanceScore +
                 PRICE_WEIGHT * priceScore +
                 RATING_WEIGHT * ratingScore +
-                FAVORITE_WEIGHT * favoriteScore;
+                TYPE_WEIGHT * typeScore;
             return { ...place, rankScore };
         });
         const sortedPlaces = scoredPlaces.sort((a, b) => b.rankScore - a.rankScore);
