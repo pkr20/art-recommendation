@@ -17,6 +17,23 @@ function PlacePage() {
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // to add a favorite to localstorage
+  const addFavorite = (placeId) => {
+    const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+    if (!favorites.includes(placeId)) {
+      favorites.push(placeId);
+      localStorage.setItem('artBase_favorites', JSON.stringify(favorites));
+    }
+  };
+  
+  // to remove a favorite from local storage
+  const removeFavorite = (placeId) => {
+    const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+    const updated = favorites.filter(id => id !== placeId);
+    localStorage.setItem('artBase_favorites', JSON.stringify(updated));
+  }; 
+  
+
   useEffect(() => {
     if (!window.google || !window.google.maps) {
       const script = document.createElement('script');
@@ -62,6 +79,7 @@ function PlacePage() {
       if (response.ok) {
         setIsFavorite(true);
       }
+      addFavorite(placeId)
     } catch (err) {
       console.error('Fetch failed:', err);
     }
@@ -79,6 +97,7 @@ function PlacePage() {
     } catch (err) {
       console.error('Fetch failed:', err);
     }
+    removeFavorite(placeId)
   };
 
   if (error) {
