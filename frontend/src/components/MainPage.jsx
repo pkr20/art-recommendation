@@ -251,11 +251,40 @@ export default function MainPage() {
     });
   }, [places, viewMode]);
 
-  // filter places based on search input #technical challenge
-  const filteredPlaces = places.filter(place =>
-    place.name.toLowerCase().includes(searchInput.toLowerCase()) ||
-    (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
-  );
+  // synonym groups for search expansion
+  const SYNONYM_GROUPS = [
+    ['gallery', 'galleries', 'art exhibit', 'art space', 'art center'],
+    ['museum', 'museums', 'art museum', 'art museums', 'cultural institution', 'cultural institutions'],
+    ['modern', 'contemporary', 'abstract'],
+  ];
+
+  // expand search terms to include synonyms (with substring matching)
+  function expandSearchTerms(input) {
+    const terms = input.toLowerCase().split(/\s+/);
+    let expanded = new Set(terms);
+    SYNONYM_GROUPS.forEach(group => {
+      if (
+        group.some(word =>
+          terms.includes(word) ||
+          terms.some(term => word.includes(term) || term.includes(word))
+        )
+      ) {
+        group.forEach(word => expanded.add(word));
+      }
+    });
+    return Array.from(expanded);
+  }
+
+  // filter places based on search input 
+  const expandedTerms = expandSearchTerms(searchInput);
+  console.log('Expanded search terms:', expandedTerms);
+  const filteredPlaces = places.filter(place => {
+    const name = place.name ? place.name.toLowerCase() : '';
+    const vicinity = place.vicinity ? place.vicinity.toLowerCase() : '';
+    return expandedTerms.some(term =>
+      name.includes(term) || vicinity.includes(term)
+    );
+  });
 
   // helper function to render a Card for a place
   function renderPlaceCard(place, id) {
