@@ -258,15 +258,54 @@ export default function MainPage() {
     ['modern', 'contemporary', 'abstract'],
   ];
 
-  // expand search terms to include synonyms (with substring matching)
-  function expandSearchTerms(input) {
+  //Simple Levenshtein Distance for fuzzy matching
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  }
+
+  // fuzzy match: true if term is in text or within 1 letter difference of any word in text
+  function fuzzyMatch(term, text) {
+    if (text.includes(term)) return true;
+    const words = text.split(/\s+/);
+    return words.some(word => levenshtein(word, term) <= 1);
+  }
+
+  // fuzzy match: true if two words are within 1 letter difference
+  function fuzzyWordMatch(a, b) {
+    return levenshtein(a, b) <= 1;
+  }
+
+  // fuzzy-first synonym expansion
+  function expandSearchTermsFuzzy(input) {
     const terms = input.toLowerCase().split(/\s+/);
     let expanded = new Set(terms);
     SYNONYM_GROUPS.forEach(group => {
       if (
         group.some(word =>
-          terms.includes(word) ||
-          terms.some(term => word.includes(term) || term.includes(word))
+          terms.some(term => fuzzyWordMatch(word, term))
         )
       ) {
         group.forEach(word => expanded.add(word));
@@ -276,7 +315,7 @@ export default function MainPage() {
   }
 
   // filter places based on search input 
-  const expandedTerms = expandSearchTerms(searchInput);
+  const expandedTerms = expandSearchTermsFuzzy(searchInput);
   console.log('Expanded search terms:', expandedTerms);
   const filteredPlaces = places.filter(place => {
     const name = place.name ? place.name.toLowerCase() : '';
