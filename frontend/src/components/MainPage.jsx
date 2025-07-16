@@ -12,6 +12,8 @@ export default function MainPage() {
   const [places, setPlaces] = useState([]);
   const [placeType, setPlaceType] = useState('art_gallery');
   const [viewMode, setViewMode] = useState('list'); // list or map
+  const [useKeyword, setUseKeyword] = useState(false); // for keyword-based search
+  const [keywordValue, setKeywordValue] = useState('art fair'); // which keyword to use
 
   // User location state
   const [location, setLocation] = useState(null);
@@ -144,31 +146,82 @@ export default function MainPage() {
       if (window.google && window.google.maps) {
         const map= document.createElement('div')
         const service = new window.google.maps.places.PlacesService(map);
-        const request = {
+        const requestType = {
           location,
           radius: 50000,
           type: placeType, 
-          //query: 'art fair',
-          };
-
-
-          service.nearbySearch(request, (results, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-              setPlaces(results);
-              //saves the user's search input, the results, and the place type to history
-              if (searchInput.trim()) {
-                saveSearchQuery(searchInput, results, placeType);
-              }
+        };
+        const requestKeyword = {
+          location,
+          radius: 50000,
+          keyword: keywordValue,
+        };
+        if (useKeyword) {
+          // only fetch by keyword
+          service.nearbySearch(requestKeyword, (resultsKeyword, statusKeyword) => {
+            if (statusKeyword === window.google.maps.places.PlacesServiceStatus.OK && resultsKeyword.length > 0) {
+              setPlaces(resultsKeyword);
+            } else {
+              setPlaces([]);
             }
           });
+        } else {
+          // fetch by type, then also fetch by keyword and merge
+          service.nearbySearch(requestType, (resultsType, statusType) => {
+            let allResults = [];
+            if (statusType === window.google.maps.places.PlacesServiceStatus.OK && resultsType.length > 0) {
+              allResults = resultsType;
+            }
+            // fetch by keyword and merge
+            service.nearbySearch({ ...requestKeyword, keyword: 'art fair' }, (resultsKeyword, statusKeyword) => {
+              if (statusKeyword === window.google.maps.places.PlacesServiceStatus.OK && resultsKeyword.length > 0) {
+                const merged = [...allResults, ...resultsKeyword].reduce((acc, place) => {
+                  if (!acc.some(p => p.place_id === place.place_id)) {
+                    acc.push(place);
+                  }
+                  return acc;
+                }, []);
+                // now also fetch exhibitions and merge
+                service.nearbySearch({ ...requestKeyword, keyword: 'exhibition' }, (resultsExhibition, statusExhibition) => {
+                  if (statusExhibition === window.google.maps.places.PlacesServiceStatus.OK && resultsExhibition.length > 0) {
+                    const mergedAll = [...merged, ...resultsExhibition].reduce((acc, place) => {
+                      if (!acc.some(p => p.place_id === place.place_id)) {
+                        acc.push(place);
+                      }
+                      return acc;
+                    }, []);
+                    setPlaces(mergedAll);
+                  } else {
+                    setPlaces(merged);
+                  }
+                });
+              } else {
+                // if no art fair results, just fetch exhibitions and merge with type
+                service.nearbySearch({ ...requestKeyword, keyword: 'exhibition' }, (resultsExhibition, statusExhibition) => {
+                  if (statusExhibition === window.google.maps.places.PlacesServiceStatus.OK && resultsExhibition.length > 0) {
+                    const mergedAll = [...allResults, ...resultsExhibition].reduce((acc, place) => {
+                      if (!acc.some(p => p.place_id === place.place_id)) {
+                        acc.push(place);
+                      }
+                      return acc;
+                    }, []);
+                    setPlaces(mergedAll);
+                  } else {
+                    setPlaces(allResults);
+                  }
+                });
+              }
+            });
+          });
         }
-      };
+      }
+    };
     document.body.appendChild(script);
     
     return () => {
       document.body.removeChild(script);
     };
-  }, [placeType, location, searchInput]);
+  }, [placeType, location, searchInput, useKeyword, keywordValue]);
 
   // map creating marker logic
   useEffect(() => {
@@ -287,13 +340,21 @@ export default function MainPage() {
         <p>Browse through art galleries and museums in your area</p>
         
         <div className='filter-container'>
-          <button className={`filter-btn ${placeType === 'art_gallery' ? 'active' : ''}`}
-            onClick={() => setPlaceType('art_gallery')}>
+          <button className={`filter-btn ${placeType === 'art_gallery' && !useKeyword ? 'active' : ''}`}
+            onClick={() => { setPlaceType('art_gallery'); setUseKeyword(false); }}>
             Art Galleries
           </button>
-          <button className={`filter-btn ${placeType === 'museum' ? 'active' : ''}`}
-            onClick={() => setPlaceType('museum')}>
+          <button className={`filter-btn ${placeType === 'museum' && !useKeyword ? 'active' : ''}`}
+            onClick={() => { setPlaceType('museum'); setUseKeyword(false); }}>
             Museums
+          </button>
+          <button className={`filter-btn ${useKeyword && keywordValue === 'art fair' ? 'active' : ''}`}
+            onClick={() => { setUseKeyword(true); setKeywordValue('art fair'); }}>
+            Art Fairs
+          </button>
+          <button className={`filter-btn ${useKeyword && keywordValue === 'exhibition' ? 'active' : ''}`}
+            onClick={() => { setUseKeyword(true); setKeywordValue('exhibition'); }}>
+            Exhibitions
           </button>
           <button className='filter-btn' onClick={() => navigate('/favorites')}>
             Favorites

@@ -49,7 +49,6 @@ export default function RecommendedPage() {
 
     useEffect(() => {
         if (!userLocation) return; // Wait for location to be set
-        
         setLoading(true);
         const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -58,19 +57,59 @@ export default function RecommendedPage() {
             if (window.google && window.google.maps) {
                 const map = document.createElement('div');
                 const service = new window.google.maps.places.PlacesService(map);
-                const request = {
+                const requestGallery = {
                     location: userLocation,
                     radius: 50000,
                     type: 'art_gallery',
                 };
-                service.nearbySearch(request, (results, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                        setPlaces(results);
+                const requestMuseum = {
+                    location: userLocation,
+                    radius: 50000,
+                    type: 'museum',
+                };
+                const requestKeyword = {
+                    location: userLocation,
+                    radius: 50000,
+                    keyword: 'art fair',
+                };
+                // fetch art galleries
+                service.nearbySearch(requestGallery, (resultsGallery, statusGallery) => {
+                    let allResults = [];
+                    if (statusGallery === window.google.maps.places.PlacesServiceStatus.OK && resultsGallery.length > 0) {
+                        allResults = resultsGallery;
                     }
-                    //add 3 second delay before hiding loading
-                    setTimeout(() => {
-                        setLoading(false);
-                    }, 3000);
+                    // fetch museums
+                    service.nearbySearch(requestMuseum, (resultsMuseum, statusMuseum) => {
+                        if (statusMuseum === window.google.maps.places.PlacesServiceStatus.OK && resultsMuseum.length > 0) {
+                            allResults = [...allResults, ...resultsMuseum];
+                        }
+                        // fetch by keyword and merge
+                        service.nearbySearch(requestKeyword, (resultsKeyword, statusKeyword) => {
+                            if (statusKeyword === window.google.maps.places.PlacesServiceStatus.OK && resultsKeyword.length > 0) {
+                                //merge all results, removing duplicates by place_id
+                                const merged = [...allResults, ...resultsKeyword].reduce((acc, place) => {
+                                    if (!acc.some(p => p.place_id === place.place_id)) {
+                                        acc.push(place);
+                                    }
+                                    return acc;
+                                }, []);
+                                setPlaces(merged);
+                            } else {
+                                //merge galleries and museums only
+                                const merged = allResults.reduce((acc, place) => {
+                                    if (!acc.some(p => p.place_id === place.place_id)) {
+                                        acc.push(place);
+                                    }
+                                    return acc;
+                                }, []);
+                                setPlaces(merged);
+                            }
+                            setTimeout(() => {
+                                setLoading(false);
+                            }, 3000); //add 3 second delay before hiding loading
+
+                        });
+                    });
                 });
             }
         };
@@ -78,7 +117,7 @@ export default function RecommendedPage() {
         return () => {
             document.body.removeChild(script);
         };
-    }, [userLocation]); 
+    }, [userLocation]);
 
     // recommendation algorithm: score and sort after places are loaded
     useEffect(() => {
