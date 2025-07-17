@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from './Card';
 import Header from './Header';
+import Loader from './Loader';
 
 export default function RecommendedPage() {
     // eucledian distance algo
@@ -232,10 +233,7 @@ export default function RecommendedPage() {
             </div>
             <div className='card-container'>
                 {loading ? (
-                    <div className="loading-container">
-                        <h2>Loading...</h2>
-                        <p>Finding the best art galleries for you</p>
-                    </div>
+                    <Loader />
                 ) : filteredPlaces.length === 0 ? (
                     <div>No recommendations found.</div>
                 ) : (
