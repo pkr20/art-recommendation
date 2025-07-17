@@ -6,6 +6,12 @@ import Card from './Card';
 import SearchBar from './SearchBar';
 import Header from './Header';
 import { rankSearchResults } from '../utils/recommendationUtils';
+import {
+  expandSearchTermsFuzzy,
+  getSuggestions,
+  SYNONYM_GROUPS,
+  filterPlacesFuzzySynonym
+} from '../utils/searchAlgorithm';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -252,82 +258,21 @@ export default function MainPage() {
     });
   }, [places, viewMode]);
 
-  // synonym groups for search expansion
-  const SYNONYM_GROUPS = [
-    ['gallery', 'galleries', 'art exhibit', 'art space', 'art center'],
-    ['museum', 'museums', 'art museum', 'art museums', 'cultural institution', 'cultural institutions'],
-    ['modern', 'contemporary', 'abstract'],
-  ];
 
-  //Simple Levenshtein Distance for fuzzy matching
-  function levenshtein(a, b) {
-    if (a === b) return 0;
-    if (!a.length) return b.length;
-    if (!b.length) return a.length;
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1, // substitution
-            matrix[i][j - 1] + 1,     // insertion
-            matrix[i - 1][j] + 1      // deletion
-          );
-        }
-      }
-    }
-    return matrix[b.length][a.length];
-  }
+  const filteredPlaces = filterPlacesFuzzySynonym(places, searchInput);
+  console.log('DEBUG filteredPlaces:', filteredPlaces);
 
-  // fuzzy match: true if term is in text or within 1 letter difference of any word in text
-  function fuzzyMatch(term, text) {
-    if (text.includes(term)) return true;
-    const words = text.split(/\s+/);
-    return words.some(word => levenshtein(word, term) <= 1);
-  }
-
-  // fuzzy match: true if two words are within 1 letter difference
-  function fuzzyWordMatch(a, b) {
-    return levenshtein(a, b) <= 1;
-  }
-
-  // fuzzy-first synonym expansion
-  function expandSearchTermsFuzzy(input) {
-    const terms = input.toLowerCase().split(/\s+/);
-    let expanded = new Set(terms);
-    SYNONYM_GROUPS.forEach(group => {
-      if (
-        group.some(word =>
-          terms.some(term => fuzzyWordMatch(word, term))
-        )
-      ) {
-        group.forEach(word => expanded.add(word));
-      }
+  //rank filtered results using recommendation algorithm
+  const rankedSearchResults = searchInput.trim() && location
+    ? rankSearchResults(filteredPlaces, location)
+    : filteredPlaces;
+  console.log('DEBUG rankedSearchResults:', rankedSearchResults);
+  //log recommendation scores for each result
+  if (rankedSearchResults.length && rankedSearchResults[0].rankScore !== undefined) {
+    rankedSearchResults.forEach((place, idx) => {
+      console.log(`Score #${idx + 1}: ${place.name} - rankScore: ${place.rankScore}`);
     });
-    return Array.from(expanded);
   }
-
-  // filter places based on search input 
-  const expandedTerms = expandSearchTermsFuzzy(searchInput);
-  console.log('Expanded search terms:', expandedTerms);
-  const filteredPlaces = places.filter(place => {
-    const name = place.name ? place.name.toLowerCase() : '';
-    const vicinity = place.vicinity ? place.vicinity.toLowerCase() : '';
-    return expandedTerms.some(term =>
-      name.includes(term) || vicinity.includes(term)
-    );
-  });
-
-  // apply ranking to filtered search results
-  const rankedSearchResults = searchInput.trim() && location ? rankSearchResults(filteredPlaces, location) : filteredPlaces;
 
   // helper function to render a Card for a place
   function renderPlaceCard(place, id) {
