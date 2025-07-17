@@ -87,28 +87,67 @@ export default function RecommendedPage() {
         const DISTANCE_WEIGHT = 0.3;
         const PRICE_WEIGHT = 0.25;
         const RATING_WEIGHT = 0.2;
-        const FAVORITE_WEIGHT = 0.15;
+        const TYPE_WEIGHT = 0.2; 
 
         const maxDistance = 50000; 
         const maxPrice = 4;
         const maxRating = 5;
 
-        // TODO: favorites logic
-        const favorites = [];
+        //get favorite place IDs from localStorage
+        const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+        //get viewed place IDs from localStorage
+        const interactions = JSON.parse(localStorage.getItem('artBase_userInteractions') || '{}');
+        const viewedIds = Object.keys(interactions);
+        // count types in both favorited and viewed places, with favorited counting double
+        const typeCounts = {};
+        // count favorited places (weight = 2)
+        favorites.forEach(id => {
+            const place = places.find(p => p.place_id === id);
+            if (place && place.types) {
+                place.types.forEach(type => {
+                    if (type === 'art_gallery' || type === 'museum') {
+                        typeCounts[type] = (typeCounts[type] || 0) + 2;
+                    }
+                });
+            }
+        });
+        // count viewed places (weight = 1, but don't double-count favorites)
+        viewedIds.forEach(id => {
+            if (favorites.includes(id)) return; // already counted as favorite
+            const place = places.find(p => p.place_id === id);
+            if (place && place.types) {
+                place.types.forEach(type => {
+                    if (type === 'art_gallery' || type === 'museum') {
+                        typeCounts[type] = (typeCounts[type] || 0) + 1;
+                    }
+                });
+            }
+        });
+        // calculate total normalization
+        const totalTypeCount = Object.values(typeCounts).reduce((a, b) => a + b, 0);
 
         const scoredPlaces = places.map(place => {
             const distance = place.geometry.location ? 
-            calculateDistance(userLocation, place.geometry.location) : maxDistance;
-            const isFavorite = false // always false for now
+                calculateDistance(userLocation, place.geometry.location) : maxDistance;
             const distanceScore = 1 - (distance / maxDistance);
             const priceScore = place.price_level !== undefined ? (1 - (place.price_level / maxPrice)) : 0.5;
             const ratingScore = place.rating !== undefined ? (place.rating / maxRating) : 0.3;
-            const favoriteScore = isFavorite ? 0 : 1; //favorites are rated lower so user can try new places
+            // type score: proportional to how often this type appears in favorites or views
+            let typeScore = 0;
+            if (place.types) {
+                typeScore = place.types.reduce((acc, type) => {
+                    if (typeCounts[type] && totalTypeCount > 0) {
+                        return acc + typeCounts[type] / totalTypeCount;
+                    }
+                    return acc;
+                }, 0);
+                typeScore = Math.min(typeScore, 1.0);
+            }
             const rankScore =
                 DISTANCE_WEIGHT * distanceScore +
                 PRICE_WEIGHT * priceScore +
                 RATING_WEIGHT * ratingScore +
-                FAVORITE_WEIGHT * favoriteScore;
+                TYPE_WEIGHT * typeScore;
             return { ...place, rankScore };
         });
         const sortedPlaces = scoredPlaces.sort((a, b) => b.rankScore - a.rankScore);
