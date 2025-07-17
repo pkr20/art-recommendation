@@ -83,6 +83,10 @@ export default function MainPage() {
     localStorage.setItem('artBase_userInteractions', JSON.stringify(updatedInteractions));
   };
 
+
+
+
+
   // get user's most searched terms
   const getUserMostSearched = () => {
     const queryCounts = {};
