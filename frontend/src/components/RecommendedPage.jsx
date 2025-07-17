@@ -49,7 +49,6 @@ export default function RecommendedPage() {
 
     useEffect(() => {
         if (!userLocation) return; // Wait for location to be set
-        
         setLoading(true);
         const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -58,19 +57,71 @@ export default function RecommendedPage() {
             if (window.google && window.google.maps) {
                 const map = document.createElement('div');
                 const service = new window.google.maps.places.PlacesService(map);
-                const request = {
+                const requestGallery = {
                     location: userLocation,
                     radius: 50000,
                     type: 'art_gallery',
                 };
-                service.nearbySearch(request, (results, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                        setPlaces(results);
+                const requestMuseum = {
+                    location: userLocation,
+                    radius: 50000,
+                    type: 'museum',
+                };
+                const requestArtFair = {
+                    location: userLocation,
+                    radius: 50000,
+                    keyword: 'art fair',
+                };
+                const requestExhibition = {
+                    location: userLocation,
+                    radius: 50000,
+                    keyword: 'exhibition',
+                };
+                // fetch art galleries
+                service.nearbySearch(requestGallery, (resultsGallery, statusGallery) => {
+                    let allResults = [];
+                    if (statusGallery === window.google.maps.places.PlacesServiceStatus.OK && resultsGallery.length > 0) {
+                        allResults = resultsGallery;
                     }
-                    //add 3 second delay before hiding loading
-                    setTimeout(() => {
-                        setLoading(false);
-                    }, 3000);
+                    // fetch museums
+                    service.nearbySearch(requestMuseum, (resultsMuseum, statusMuseum) => {
+                        if (statusMuseum === window.google.maps.places.PlacesServiceStatus.OK && resultsMuseum.length > 0) {
+                            allResults = [...allResults, ...resultsMuseum];
+                        }
+                        // fetch art fairs
+                        service.nearbySearch(requestArtFair, (resultsArtFair, statusArtFair) => {
+                            if (statusArtFair === window.google.maps.places.PlacesServiceStatus.OK && resultsArtFair.length > 0) {
+                                // tag art fair results
+                                resultsArtFair.forEach(place => {
+                                    if (!place.types) place.types = [];
+                                    if (!place.types.includes('art_fair')) place.types.push('art_fair');
+                                });
+                                allResults = [...allResults, ...resultsArtFair];
+                            }
+                            // fetch exhibitions
+                            service.nearbySearch(requestExhibition, (resultsExhibition, statusExhibition) => {
+                                if (statusExhibition === window.google.maps.places.PlacesServiceStatus.OK && resultsExhibition.length > 0) {
+                                    // tag exhibition results
+                                    resultsExhibition.forEach(place => {
+                                        if (!place.types) place.types = [];
+                                        if (!place.types.includes('exhibition')) place.types.push('exhibition');
+                                    });
+                                    allResults = [...allResults, ...resultsExhibition];
+                                }
+                                // merge all results, removing duplicates by place_id
+                                const merged = allResults.reduce((acc, place) => {
+                                    if (!acc.some(p => p.place_id === place.place_id)) {
+                                        acc.push(place);
+                                    }
+                                    return acc;
+                                }, []);
+                                setPlaces(merged);
+                                setTimeout(() => {
+                                    setLoading(false);
+                                }, 3000);
+                            });
+                        });
+                    });
                 });
             }
         };
@@ -78,7 +129,7 @@ export default function RecommendedPage() {
         return () => {
             document.body.removeChild(script);
         };
-    }, [userLocation]); 
+    }, [userLocation]);
 
     // recommendation algorithm: score and sort after places are loaded
     useEffect(() => {
@@ -105,7 +156,7 @@ export default function RecommendedPage() {
             const place = places.find(p => p.place_id === id);
             if (place && place.types) {
                 place.types.forEach(type => {
-                    if (type === 'art_gallery' || type === 'museum') {
+                    if (type === 'art_gallery' || type === 'museum' || type === 'art_fair' || type === 'exhibition') {
                         typeCounts[type] = (typeCounts[type] || 0) + 2;
                     }
                 });
@@ -117,7 +168,7 @@ export default function RecommendedPage() {
             const place = places.find(p => p.place_id === id);
             if (place && place.types) {
                 place.types.forEach(type => {
-                    if (type === 'art_gallery' || type === 'museum') {
+                    if (type === 'art_gallery' || type === 'museum' || type === 'art_fair' || type === 'exhibition') {
                         typeCounts[type] = (typeCounts[type] || 0) + 1;
                     }
                 });
