@@ -5,6 +5,7 @@ import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
 import SearchBar from './SearchBar';
 import Header from './Header';
+import { rankSearchResults } from '../utils/recommendationUtils';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -325,6 +326,9 @@ export default function MainPage() {
     );
   });
 
+  // apply ranking to filtered search results
+  const rankedSearchResults = searchInput.trim() && location ? rankSearchResults(filteredPlaces, location) : filteredPlaces;
+
   // helper function to render a Card for a place
   function renderPlaceCard(place, id) {
     //extract photo url 
@@ -452,7 +456,7 @@ export default function MainPage() {
 
         {viewMode === 'list' && (
           <div className='card-container'>
-            {filteredPlaces.map(renderPlaceCard)}
+            {rankedSearchResults.map(renderPlaceCard)}
           </div>
         )}
       </div>
