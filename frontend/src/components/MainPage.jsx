@@ -5,7 +5,7 @@ import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
 import SearchBar from './SearchBar';
 import Header from './Header';
-import { rankSearchResults } from '../utils/recommendationUtils';
+import { rankSearchResults } from '../utils/recommendationAlgo';
 import {
   expandSearchTermsFuzzy,
   getSuggestions,
