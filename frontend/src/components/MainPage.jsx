@@ -5,6 +5,13 @@ import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
 import SearchBar from './SearchBar';
 import Header from './Header';
+import { rankSearchResults } from '../utils/recommendationAlgo';
+import {
+  expandSearchTermsFuzzy,
+  getSuggestions,
+  SYNONYM_GROUPS,
+  filterPlacesFuzzySynonym
+} from '../utils/searchAlgorithm';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -251,11 +258,21 @@ export default function MainPage() {
     });
   }, [places, viewMode]);
 
-  // filter places based on search input #technical challenge
-  const filteredPlaces = places.filter(place =>
-    place.name.toLowerCase().includes(searchInput.toLowerCase()) ||
-    (place.vicinity && place.vicinity.toLowerCase().includes(searchInput.toLowerCase()))
-  );
+
+  const filteredPlaces = filterPlacesFuzzySynonym(places, searchInput);
+  console.log('DEBUG filteredPlaces:', filteredPlaces);
+
+  //rank filtered results using recommendation algorithm
+  const rankedSearchResults = searchInput.trim() && location
+    ? rankSearchResults(filteredPlaces, location)
+    : filteredPlaces;
+  console.log('DEBUG rankedSearchResults:', rankedSearchResults);
+  //log recommendation scores for each result
+  if (rankedSearchResults.length && rankedSearchResults[0].rankScore !== undefined) {
+    rankedSearchResults.forEach((place, idx) => {
+      console.log(`Score #${idx + 1}: ${place.name} - rankScore: ${place.rankScore}`);
+    });
+  }
 
   // helper function to render a Card for a place
   function renderPlaceCard(place, id) {
@@ -384,7 +401,7 @@ export default function MainPage() {
 
         {viewMode === 'list' && (
           <div className='card-container'>
-            {filteredPlaces.map(renderPlaceCard)}
+            {rankedSearchResults.map(renderPlaceCard)}
           </div>
         )}
       </div>
