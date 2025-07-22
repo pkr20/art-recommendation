@@ -107,12 +107,12 @@ export function getSuggestions(searchInput, places) {
       if (!name) {
         return false;
       }
-      return name.toLowerCase().includes(lowerInput);
+      return fuzzyMatch(lowerInput, name.toLowerCase());
     });
   const synonymSuggestions = SYNONYM_GROUPS
     .flat()
     .filter(word => {
-      return word.includes(lowerInput) && !nameSuggestions.includes(word);
+      return fuzzyMatch(lowerInput, word) && !nameSuggestions.includes(word);
     });
   const allSuggestions = [...nameSuggestions, ...synonymSuggestions]
     .filter((v, i, a) => a.indexOf(v) === i)
