@@ -76,14 +76,16 @@ export default function MainPage() {
   };
 
   // track user interaction with a place
-  const trackUserInteraction = (placeId, interactionType) => {
+  const trackUserInteraction = (place, interactionType) => {
     const timestamp = new Date().toISOString();
     const updatedInteractions = {
       ...userInteractions,
-      [placeId]: {
-        ...userInteractions[placeId],
+      [place.place_id]: {
+        ...userInteractions[place.place_id],
         [interactionType]: timestamp,
         lastInteraction: timestamp,
+        types: place.types,
+        name: place.name
       }
     };
     
@@ -287,6 +289,7 @@ export default function MainPage() {
       vicinity: place.vicinity,
       location: place.location,
       photoUrl,
+      types: place.types
     };
     return (
       <Card
@@ -297,7 +300,7 @@ export default function MainPage() {
         placeId={place.place_id}
         place={placeObject}
         // track when a user clicks/views a card
-        onCardClick={() => trackUserInteraction(place.place_id, 'viewed')}
+        onCardClick={() => trackUserInteraction(place, 'viewed')}
       />
     );
   }
@@ -309,7 +312,7 @@ export default function MainPage() {
       ) : locationError ? (
         <div>{locationError}</div>
       ) : null}
-      <Header searchInput={searchInput} setSearchInput={setSearchInput} />
+      <Header searchInput={searchInput} setSearchInput={setSearchInput} places={places}/>
 
       <div className="hero-section">
         <h1>Discover Amazing Art Scenes</h1>

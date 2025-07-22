@@ -3,20 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Card from './Card';
 import Header from './Header';
 import Loader from './Loader';
+import { rankSearchResults } from '../utils/recommendationAlgo';
 
 export default function RecommendedPage() {
-    // eucledian distance algo
-    function calculateDistance(userLocation, placeLocation) {
-        // userLocation: {lat, lng}, placeLocation: google.maps.LatLng
-        const lat1 = userLocation.lat;
-        const lng1 = userLocation.lng;
-        //Google Maps use .lat() and .lng()
-        const lat2 = typeof placeLocation.lat === 'function' ? placeLocation.lat() : placeLocation.lat;
-        const lng2 = typeof placeLocation.lng === 'function' ? placeLocation.lng() : placeLocation.lng;
-        const distance = Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
-        return distance;
-    }
-
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
     const [places, setPlaces] = useState([]);
@@ -132,79 +121,21 @@ export default function RecommendedPage() {
         };
     }, [userLocation]);
 
-    // recommendation algorithm: score and sort after places are loaded
+    //use shared recommendation algorithm after places are loaded
     useEffect(() => {
-        if (places.length === 0) return;
+        if (places.length === 0 || !userLocation) return;
 
-        const DISTANCE_WEIGHT = 0.3;
-        const PRICE_WEIGHT = 0.25;
-        const RATING_WEIGHT = 0.2;
-        const TYPE_WEIGHT = 0.2; 
-
-        const maxDistance = 50000; 
-        const maxPrice = 4;
-        const maxRating = 5;
-
-        //get favorite place IDs from localStorage
-        const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
-        //get viewed place IDs from localStorage
-        const interactions = JSON.parse(localStorage.getItem('artBase_userInteractions') || '{}');
-        const viewedIds = Object.keys(interactions);
-        // count types in both favorited and viewed places, with favorited counting double
-        const typeCounts = {};
-        // count favorited places (weight = 2)
-        favorites.forEach(id => {
-            const place = places.find(p => p.place_id === id);
-            if (place && place.types) {
-                place.types.forEach(type => {
-                    if (type === 'art_gallery' || type === 'museum' || type === 'art_fair' || type === 'exhibition') {
-                        typeCounts[type] = (typeCounts[type] || 0) + 2;
-                    }
-                });
-            }
+        
+        
+       //from recommendationAlgo.js
+        const rankedPlaces = rankSearchResults(places, userLocation);
+        setRecommendedPlaces(rankedPlaces);
+        
+        
+        rankedPlaces.slice(0, 3).forEach((place, index) => {
+            console.log(`${index + 1}. ${place.name} - Score: ${place.rankScore?.toFixed(3)}`);
         });
-        // count viewed places (weight = 1, but don't double-count favorites)
-        viewedIds.forEach(id => {
-            if (favorites.includes(id)) return; // already counted as favorite
-            const place = places.find(p => p.place_id === id);
-            if (place && place.types) {
-                place.types.forEach(type => {
-                    if (type === 'art_gallery' || type === 'museum' || type === 'art_fair' || type === 'exhibition') {
-                        typeCounts[type] = (typeCounts[type] || 0) + 1;
-                    }
-                });
-            }
-        });
-        // calculate total normalization
-        const totalTypeCount = Object.values(typeCounts).reduce((a, b) => a + b, 0);
-
-        const scoredPlaces = places.map(place => {
-            const distance = place.geometry.location ? 
-                calculateDistance(userLocation, place.geometry.location) : maxDistance;
-            const distanceScore = 1 - (distance / maxDistance);
-            const priceScore = place.price_level !== undefined ? (1 - (place.price_level / maxPrice)) : 0.5;
-            const ratingScore = place.rating !== undefined ? (place.rating / maxRating) : 0.3;
-            // type score: proportional to how often this type appears in favorites or views
-            let typeScore = 0;
-            if (place.types) {
-                typeScore = place.types.reduce((acc, type) => {
-                    if (typeCounts[type] && totalTypeCount > 0) {
-                        return acc + typeCounts[type] / totalTypeCount;
-                    }
-                    return acc;
-                }, 0);
-                typeScore = Math.min(typeScore, 1.0);
-            }
-            const rankScore =
-                DISTANCE_WEIGHT * distanceScore +
-                PRICE_WEIGHT * priceScore +
-                RATING_WEIGHT * ratingScore +
-                TYPE_WEIGHT * typeScore;
-            return { ...place, rankScore };
-        });
-        const sortedPlaces = scoredPlaces.sort((a, b) => b.rankScore - a.rankScore);
-        setRecommendedPlaces(sortedPlaces);
-    }, [places]);
+    }, [places, userLocation]);
 
     //filter by search input
     const filteredPlaces = recommendedPlaces.filter(place =>
