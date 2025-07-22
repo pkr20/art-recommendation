@@ -18,18 +18,27 @@ function PlacePage() {
   const [isFavorite, setIsFavorite] = useState(false);
 
   // to add a favorite to localstorage
-  const addFavorite = (placeId) => {
-    const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
-    if (!favorites.includes(placeId)) {
-      favorites.push(placeId);
+  const addFavorite = (placeId, types) => {
+    let favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+    // check if already favorited (by id)
+    const already = favorites.some(fav => (typeof fav === 'object' && fav.id === placeId) || fav === placeId);
+    if (!already) {
+      favorites.push({ id: placeId, types: types });
       localStorage.setItem('artBase_favorites', JSON.stringify(favorites));
     }
   };
   
   // to remove a favorite from local storage
   const removeFavorite = (placeId) => {
-    const favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
-    const updated = favorites.filter(id => id !== placeId);
+    let favorites = JSON.parse(localStorage.getItem('artBase_favorites') || '[]');
+    //remove by id property if object, or by value if string
+    const updated = favorites.filter(fav => {
+      if (typeof fav === 'object' && fav !== null && fav.id) {
+        return fav.id !== placeId;
+      } else {
+        return fav !== placeId;
+      }
+    });
     localStorage.setItem('artBase_favorites', JSON.stringify(updated));
   }; 
   
@@ -79,7 +88,13 @@ function PlacePage() {
       if (response.ok) {
         setIsFavorite(true);
       }
-      addFavorite(placeId)
+      //use details.place_id and details.types for storing
+      if (details && details.place_id && details.types) {
+        addFavorite(details.place_id, details.types);
+      } else {
+        // fallback: just store the id
+        addFavorite(placeId, []);
+      }
     } catch (err) {
       console.error('Fetch failed:', err);
     }

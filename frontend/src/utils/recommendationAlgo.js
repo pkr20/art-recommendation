@@ -152,8 +152,11 @@ function compareToOverall(userStats, places) {
   } else {
     ratingDiff = 0;
   }
+
   return {
-    distance, price, rating
+    distance: distanceDiff,
+    price: priceDiff,
+    rating: ratingDiff
   };
 }
 
@@ -170,6 +173,7 @@ function getDynamicWeights(userStats, overallDiffs) {
     DISTANCE_WEIGHT = DISTANCE_WEIGHT + 0.1;
     PRICE_WEIGHT = PRICE_WEIGHT - 0.05;
     RATING_WEIGHT = RATING_WEIGHT - 0.05;
+    
   }
   //if user prefers cheaper places (avgPrice < overall), increase price weight
   if (overallDiffs.price < 0) {
@@ -189,6 +193,7 @@ function getDynamicWeights(userStats, overallDiffs) {
   PRICE_WEIGHT = PRICE_WEIGHT / total;
   RATING_WEIGHT = RATING_WEIGHT / total;
   TYPE_WEIGHT = TYPE_WEIGHT / total;
+  
   return {
     DISTANCE_WEIGHT,
     PRICE_WEIGHT,
@@ -221,13 +226,29 @@ export function rankSearchResults(placesToRank, userLocation) {
   // same types are ranked higher
   const typeCounts = {};
   for (let i = 0; i < favorites.length; i++) {
-    const id = favorites[i];
-    const place = placesToRank.find(function(p) {
-      return p.place_id === id;
-    });
-    if (place && place.types) {
-      for (let j = 0; j < place.types.length; j++) {
-        const type = place.types[j];
+    const fav = favorites[i];
+    let types = null;
+    let id = fav;
+    //if favorite is an object with types, use them directly
+    if (typeof fav === 'object' && fav !== null && fav.types && fav.id) {
+      types = fav.types;
+      id = fav.id;
+
+    } else {
+      // fallback: try to find in current places
+      const place = placesToRank.find(function(p) {
+        return p.place_id === fav;
+      });
+      if (place && place.types) {
+        types = place.types;
+      } else {
+        types = null;
+      }
+    }
+    if (types) {
+   
+      for (let j = 0; j < types.length; j++) {
+        const type = types[j];
         if (
           type === 'art_gallery' ||
           type === 'museum' ||
@@ -330,6 +351,7 @@ export function rankSearchResults(placesToRank, userLocation) {
       weights.PRICE_WEIGHT * priceScore +
       weights.RATING_WEIGHT * ratingScore +
       weights.TYPE_WEIGHT * typeScore;
+      
     const placeWithScore = { ...place, rankScore: rankScore };
     ranked.push(placeWithScore);
   }
