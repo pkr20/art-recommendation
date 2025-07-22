@@ -309,7 +309,7 @@ export default function MainPage() {
       ) : locationError ? (
         <div>{locationError}</div>
       ) : null}
-      <Header searchInput={searchInput} setSearchInput={setSearchInput} />
+      <Header searchInput={searchInput} setSearchInput={setSearchInput} places={places}/>
 
       <div className="hero-section">
         <h1>Discover Amazing Art Scenes</h1>
