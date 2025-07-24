@@ -18,7 +18,7 @@ export default function SearchBar({ searchInput, setSearchInput, places = [] }) 
             setSuggestions([]);
             setShowDropdown(false);
         }
-    }, [searchInput, places]);
+    }, [searchInput]);
 
     // handles form submission
     const handleSubmit = (e) => {
