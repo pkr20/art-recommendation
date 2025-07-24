@@ -47,7 +47,7 @@ export default function SignIn({ isOpen, onClose }){
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             setUser(userCredential.user);
-            console.log('Registration successful!')
+            
             setIsSuccess(true);
             //shows success message before closing
             setTimeout(() => {

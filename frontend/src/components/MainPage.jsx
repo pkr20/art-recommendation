@@ -262,17 +262,17 @@ export default function MainPage() {
 
 
   const filteredPlaces = filterPlacesFuzzySynonym(places, searchInput);
-  console.log('DEBUG filteredPlaces:', filteredPlaces);
+  
 
   //rank filtered results using recommendation algorithm
   const rankedSearchResults = searchInput.trim() && location
     ? rankSearchResults(filteredPlaces, location)
     : filteredPlaces;
-  console.log('DEBUG rankedSearchResults:', rankedSearchResults);
+  
   //log recommendation scores for each result
   if (rankedSearchResults.length && rankedSearchResults[0].rankScore !== undefined) {
     rankedSearchResults.forEach((place, idx) => {
-      console.log(`Score #${idx + 1}: ${place.name} - rankScore: ${place.rankScore}`);
+      
     });
   }
 

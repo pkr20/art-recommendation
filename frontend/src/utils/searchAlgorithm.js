@@ -192,7 +192,7 @@ export function filterPlacesFuzzySynonym(places, searchInput) {
     return places;
   }
   const expandedTerms = expandSearchTermsFuzzy(searchInput);
-   console.log(expandedTerms)
+
   return places.filter(place => {
     const name = place.name ? place.name.toLowerCase() : '';
     const vicinity = place.vicinity ? place.vicinity.toLowerCase() : '';
