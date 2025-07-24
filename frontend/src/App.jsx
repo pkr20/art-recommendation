@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import 'animate.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
@@ -9,26 +9,34 @@ import FavoritesPage from './components/FavoritesPage';
 import Profile from './components/Profile';
 import RecommendedPage from './components/RecommendedPage';
 import EventPage from './components/EventPage';
-
+import { checkSession } from './utils/sessionApi';
 
 function App() {
-  return (
+  const [user, setUser] = useState(null);
 
-   
+  useEffect(() => {
+    async function fetchSession() {
+      const session = await checkSession();
+      if (session.loggedIn) {
+        setUser({ userId: session.userId });
+      } else {
+        setUser(null);
+      }
+    }
+    fetchSession();
+  }, []);
+
+  return (
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/" element={<SignIn />} />
-        <Route path="/main" element={<MainPage />} />
-        <Route path='/place/:placeId' element={<PlacePage/>} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/recommended" element={<RecommendedPage />} />
-        <Route path="/events" element={<EventPage />}/>
-        
-        
-
+        <Route path="/main" element={<MainPage user={user} />} />
+        <Route path='/place/:placeId' element={<PlacePage user={user}/>} />
+        <Route path="/favorites" element={<FavoritesPage user={user} />} />
+        <Route path="/profile" element={<Profile user={user} />} />
+        <Route path="/recommended" element={<RecommendedPage user={user} />} />
+        <Route path="/events" element={<EventPage user={user} />}/>
       </Routes>
-
   );
 }
 

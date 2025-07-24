@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../../backend/api/firebase";
 import {useNavigate} from "react-router-dom"
+import { loginToBackend } from '../utils/sessionApi';
 
 export default function SignIn({ isOpen, onClose }){
     const [email, setEmail] = useState(""); 
@@ -28,6 +29,13 @@ export default function SignIn({ isOpen, onClose }){
         setError("")
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            //call backend to set session cookie
+            try {
+                await loginToBackend(userCredential.user.uid);
+            } catch (err) {
+                setError("Backend login failed. Please try again.");
+                return;
+            }
             setUser(userCredential.user);
             setIsSuccess(true);
             //show success message before closing
@@ -46,8 +54,14 @@ export default function SignIn({ isOpen, onClose }){
         setError("")
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            //call backend to set session cookie
+            try {
+                await loginToBackend(userCredential.user.uid);
+            } catch (err) {
+                setError("Backend login failed. Please try again.");
+                return;
+            }
             setUser(userCredential.user);
-            
             setIsSuccess(true);
             //shows success message before closing
             setTimeout(() => {
