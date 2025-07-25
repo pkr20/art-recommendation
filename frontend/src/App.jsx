@@ -30,12 +30,12 @@ function App() {
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/" element={<SignIn />} />
-        <Route path="/main" element={<MainPage user={user} />} />
-        <Route path='/place/:placeId' element={<PlacePage user={user}/>} />
-        <Route path="/favorites" element={<FavoritesPage user={user} />} />
-        <Route path="/profile" element={<Profile user={user} />} />
-        <Route path="/recommended" element={<RecommendedPage user={user} />} />
-        <Route path="/events" element={<EventPage user={user} />}/>
+        <Route path="/main" element={<MainPage user={user} setUser={setUser} />} />
+        <Route path='/place/:placeId' element={<PlacePage user={user} setUser={setUser}/>} />
+        <Route path="/favorites" element={<FavoritesPage user={user} setUser={setUser} />} />
+        <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
+        <Route path="/recommended" element={<RecommendedPage user={user} setUser={setUser} />} />
+        <Route path="/events" element={<EventPage user={user} setUser={setUser} />}/>
       </Routes>
   );
 }

@@ -5,7 +5,7 @@ import Header from './Header';
 import Loader from './Loader';
 import { rankSearchResults } from '../utils/recommendationAlgo';
 
-export default function RecommendedPage() {
+export default function RecommendedPage({ user, setUser }) {
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
     const [places, setPlaces] = useState([]);
@@ -145,7 +145,7 @@ export default function RecommendedPage() {
 
     return (
         <div className='main-page-container'>
-            <Header searchInput={searchInput} setSearchInput={setSearchInput} />
+            <Header searchInput={searchInput} setSearchInput={setSearchInput} user={user} setUser={setUser} />
             <h1>Recommended For You</h1>
             {locationError && (
                 <div className="location-notice">

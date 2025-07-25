@@ -14,7 +14,7 @@ import {
 } from '../utils/searchAlgorithm';
 import Loader from './Loader';
 
-export default function MainPage() {
+export default function MainPage({ user, setUser }) {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('')
   const [places, setPlaces] = useState([]);
@@ -318,7 +318,7 @@ export default function MainPage() {
       ) : locationError ? (
         <div>{locationError}</div>
       ) : null}
-      <Header searchInput={searchInput} setSearchInput={setSearchInput} places={places}/>
+      <Header searchInput={searchInput} setSearchInput={setSearchInput} places={places} user={user} setUser={setUser}/>
 
       <div className="hero-section">
         <h1>Discover Amazing Art Scenes</h1>
