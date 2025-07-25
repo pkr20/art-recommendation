@@ -61,7 +61,8 @@ function PlacePage() {
       const service = new window.google.maps.places.PlacesService(mapDiv);
       service.getDetails({ placeId }, (result, status) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          setDetails(result);
+          //simulate loading for 1 second
+          setTimeout(() => setDetails(result), 1000);
         } else {
           setError('Cannot fetch place details.');
         }
