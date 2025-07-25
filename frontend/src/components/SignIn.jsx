@@ -5,11 +5,11 @@ import { auth } from "../../../backend/api/firebase";
 import {useNavigate} from "react-router-dom"
 import { loginToBackend } from '../utils/sessionApi';
 
-export default function SignIn({ isOpen, onClose }){
+export default function SignIn({ isOpen, onClose, setUser }){
     const [email, setEmail] = useState(""); 
     const [password, setPassword] = useState("");
     const [error, setError] = useState("")
-    const [user, setUser] = useState("") 
+    const [localUser, setLocalUser] = useState("") 
     const [isSuccess, setIsSuccess] = useState(false)
     const navigate = useNavigate(); 
     
@@ -18,7 +18,7 @@ export default function SignIn({ isOpen, onClose }){
         setEmail("");
         setPassword("");
         setError("");
-        setUser("");
+        setLocalUser("");
         setIsSuccess(false);
         onClose();
     };
@@ -27,8 +27,10 @@ export default function SignIn({ isOpen, onClose }){
     const handleSignIn = async (e) => {
         e.preventDefault(); 
         setError("")
+        
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            
             //call backend to set session cookie
             try {
                 await loginToBackend(userCredential.user.uid);
@@ -36,7 +38,14 @@ export default function SignIn({ isOpen, onClose }){
                 setError("Backend login failed. Please try again.");
                 return;
             }
-            setUser(userCredential.user);
+            
+            setLocalUser(userCredential.user);
+            
+            //update global user state if setUser is available
+            if (setUser) {
+                setUser({ userId: userCredential.user.uid });
+            }
+            
             setIsSuccess(true);
             //show success message before closing
             setTimeout(() => {
@@ -52,8 +61,10 @@ export default function SignIn({ isOpen, onClose }){
     const handleRegister = async (e) => {
         e.preventDefault(); 
         setError("")
+        
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            
             //call backend to set session cookie
             try {
                 await loginToBackend(userCredential.user.uid);
@@ -61,7 +72,12 @@ export default function SignIn({ isOpen, onClose }){
                 setError("Backend login failed. Please try again.");
                 return;
             }
-            setUser(userCredential.user);
+            
+            setLocalUser(userCredential.user);
+            if (setUser) {
+                setUser({ userId: userCredential.user.uid });
+            }
+            
             setIsSuccess(true);
             //shows success message before closing
             setTimeout(() => {
@@ -87,7 +103,7 @@ export default function SignIn({ isOpen, onClose }){
                         <div className="signin-success-container">
                             <div className="success-icon">✓</div>
                             <h3>Success!</h3>
-                            <p>Welcome, {user.email}!</p>
+                            <p>Welcome, {localUser.email}!</p>
                             <p>Redirecting to main page...</p>
                         </div>
                     ) : (
