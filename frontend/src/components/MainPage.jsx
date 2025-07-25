@@ -12,6 +12,7 @@ import {
   SYNONYM_GROUPS,
   filterPlacesFuzzySynonym
 } from '../utils/searchAlgorithm';
+import Loader from './Loader';
 
 export default function MainPage() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function MainPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
+  const [loadingPlaces, setLoadingPlaces] = useState(false);
 
   //handle sign out from the main page
   const handleSignOut = async () => {
@@ -148,6 +150,7 @@ export default function MainPage() {
   //gets the google maps API information for nearby locations to render
   useEffect(() => {
     if (!location) return;
+    setLoadingPlaces(true);
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
@@ -173,6 +176,7 @@ export default function MainPage() {
             } else {
               setPlaces([]);
             }
+            setTimeout(() => setLoadingPlaces(false), 1000);
           });
         } else {
           // fetch by type, then also fetch by keyword and merge
@@ -203,6 +207,7 @@ export default function MainPage() {
                   } else {
                     setPlaces(merged);
                   }
+                  setTimeout(() => setLoadingPlaces(false), 1000);
                 });
               } else {
                 // if no art fair results, just fetch exhibitions and merge with type
@@ -218,6 +223,7 @@ export default function MainPage() {
                   } else {
                     setPlaces(allResults);
                   }
+                  setTimeout(() => setLoadingPlaces(false), 1000); 
                 });
               }
             });
@@ -262,17 +268,17 @@ export default function MainPage() {
 
 
   const filteredPlaces = filterPlacesFuzzySynonym(places, searchInput);
-  console.log('DEBUG filteredPlaces:', filteredPlaces);
+  
 
   //rank filtered results using recommendation algorithm
   const rankedSearchResults = searchInput.trim() && location
     ? rankSearchResults(filteredPlaces, location)
     : filteredPlaces;
-  console.log('DEBUG rankedSearchResults:', rankedSearchResults);
+  
   //log recommendation scores for each result
   if (rankedSearchResults.length && rankedSearchResults[0].rankScore !== undefined) {
     rankedSearchResults.forEach((place, idx) => {
-      console.log(`Score #${idx + 1}: ${place.name} - rankScore: ${place.rankScore}`);
+      
     });
   }
 
@@ -404,7 +410,7 @@ export default function MainPage() {
 
         {viewMode === 'list' && (
           <div className='card-container'>
-            {rankedSearchResults.map(renderPlaceCard)}
+            {loadingPlaces ? <Loader /> : rankedSearchResults.map(renderPlaceCard)}
           </div>
         )}
       </div>

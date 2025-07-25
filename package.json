@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "animate.css": "^4.1.1",
+    "cookie-parser": "^1.4.7",
     "framer-motion": "^12.23.5",
     "openai": "^5.10.0"
   }
