@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
+import Loader from './Loader';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -41,18 +42,21 @@ export default function FavoritesPage() {
             // when all requests are complete, update state
             if (completedRequests === favoritesData.length) {
               setFavoritePlaces(favoritePlacesData);
-              setLoading(false);
+  
+              setTimeout(() => setLoading(false), 1000);
             }
           });
         });
       } else {
         //if no favorites or Google Maps not available
         setFavoritePlaces([]);
-        setLoading(false);
+        // simulate loading for at least 1 second
+        setTimeout(() => setLoading(false), 1000);
       }
     } catch (error) {
       console.error('Error fetching favorites:', error);
-      setLoading(false);
+     
+      setTimeout(() => setLoading(false), 1000);
     }
   };
 
@@ -86,9 +90,7 @@ export default function FavoritesPage() {
 
       <div className='card-container'>
         {loading ? (
-          <div >
-            Loading favorites...
-          </div>
+          <Loader />
         ) : favoritePlaces.length === 0 ? (
           <div className='no-favorites'>
             No favorites yet. Add some places to your favorites!
