@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Tooltip from './Tooltip';
+import Loader from './Loader';
 
 function getPriceLevel(level) {
   if (level === 0) return 'Free';
@@ -120,7 +121,7 @@ function PlacePage() {
     return <div className="placepage-container">{error}</div>;
   }
   if (!details) {
-    return <div className="placepage-container">Loading place details...</div>;
+    return <div className="placepage-container"><Loader /></div>;
   }
 
   return (

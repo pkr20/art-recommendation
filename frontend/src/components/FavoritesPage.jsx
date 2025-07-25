@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
+import Loader from './Loader';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -84,9 +85,7 @@ export default function FavoritesPage() {
 
       <div className='card-container'>
         {loading ? (
-          <div >
-            Loading favorites...
-          </div>
+          <Loader />
         ) : favoritePlaces.length === 0 ? (
           <div className='no-favorites'>
             No favorites yet. Add some places to your favorites!
