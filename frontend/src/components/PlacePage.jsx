@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Tooltip from './Tooltip';
 
 function getPriceLevel(level) {
   if (level === 0) return 'Free';
@@ -127,9 +128,13 @@ function PlacePage() {
       <button className="placepage-back-btn" onClick={() => navigate(-1)}>← Back</button>
       <div className="placepage-info-panel">
         {isFavorite ? (
-          <button className="unfavorite-btn" onClick={handleUnfavorite}>Unfavorite ♥ </button>
+          <Tooltip text="Remove from your favorites">
+            <button className="unfavorite-btn" onClick={handleUnfavorite}>Unfavorite ♥ </button>
+          </Tooltip>
         ) : (
-          <button className="favorite-btn" onClick={handleFavorite}>Favorite ♡ </button>
+          <Tooltip text="Add to your favorites!">
+            <button className="favorite-btn" onClick={handleFavorite}>Favorite ♡ </button>
+          </Tooltip>
         )}
         <h1 className="placepage-title">{details.name}</h1>
         <p className="placepage-address">{details.formatted_address || details.vicinity}</p>
