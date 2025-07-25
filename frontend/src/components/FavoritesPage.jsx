@@ -17,7 +17,9 @@ export default function FavoritesPage() {
       setLoading(true);
       
       //fetch favorite place IDs from backend
-      const response = await fetch('http://localhost:3000/favorites');
+      const response = await fetch('http://localhost:3000/favorites', {
+        credentials: 'include'
+      });
       const favoritesData = await response.json();
       
       //favorites and Google Maps API is available

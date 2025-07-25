@@ -133,7 +133,7 @@ export default function RecommendedPage() {
         
         
         rankedPlaces.slice(0, 3).forEach((place, index) => {
-            console.log(`${index + 1}. ${place.name} - Score: ${place.rankScore?.toFixed(3)}`);
+            
         });
     }, [places, userLocation]);
 

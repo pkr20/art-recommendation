@@ -69,7 +69,9 @@ function PlacePage() {
 
   //set isFavorite
   useEffect(() => {
-    fetch(`http://localhost:3000/favorites/${placeId}`)
+    fetch(`http://localhost:3000/favorites/${placeId}`, {
+      credentials: 'include'
+    })
       .then(res => res.json())
       .then(data => 
         setIsFavorite(data.isFavorite)
@@ -83,6 +85,7 @@ function PlacePage() {
       const response = await fetch('http://localhost:3000/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ placeId }),
       });
       if (response.ok) {
@@ -105,6 +108,7 @@ function PlacePage() {
     try {
       const response = await fetch(`http://localhost:3000/favorites/${placeId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (response.ok) {
         setIsFavorite(false);
