@@ -6,16 +6,15 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
     const navigate = useNavigate();
-    const handleSignOut = () => {
-        signOut(auth);
-        navigate('/signin');
+    const handleNavigate = () => {
+        navigate('/main');
     }
     return (
         <div className="profile-container">
             <div className="profile-header">
                 <h1>My Profile</h1>
-                <button className="sign-out-btn" onClick={handleSignOut}>
-                    Sign Out
+                <button onClick={handleNavigate}>
+                     Main Page
                 </button>
             </div>
             
