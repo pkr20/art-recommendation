@@ -151,6 +151,180 @@ app.get('/api/session', async (req, res) => {
   }
 });
 
+// Review endpoints
+
+// GET all reviews for a place
+app.get('/reviews/:placeId', async (req, res) => {
+  try {
+    const { placeId } = req.params;
+    const { limit = 20, offset = 0, rating } = req.query;
+    
+    const where = { placeId };
+    if (rating) where.rating = parseInt(rating);
+    
+    const reviews = await prisma.review.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: parseInt(limit),
+      skip: parseInt(offset),
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        helpful: true,
+        userId: true
+      }
+    });
+    const total = await prisma.review.count({where});
+    const avgRating = await prisma.review.aggregate({
+      where: {placeId},
+      _avg: {rating: true },
+      _count: { rating: true }
+    });
+    res.json({
+      reviews,
+      stats: {
+        total,
+        averageRating: avgRating._avg.rating || 0,
+        totalReviews: avgRating._count.rating || 0
+      },
+      pagination: {
+        total,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      }
+    });
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to fetch reviews', details: error.message });
+  }
+});
+
+//POST create a new review
+app.post('/reviews', async (req, res) => {
+  const userId = req.cookies.session;
+  if (!userId) return res.status(401).json({ error: 'Not logged in' });
+  
+  try {
+    const { placeId, rating, comment } = req.body;
+    if (!placeId || !rating || !comment) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const review = await prisma.review.create({
+      data: {
+        placeId,
+        userId,
+        rating,
+        comment
+      }
+    });
+    res.json(review);
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to create review', details: error.message });
+  }
+});
+
+
+
+//PUT update an existing review
+app.put('/reviews/:reviewId', async (req, res) => {
+  const userId = req.cookies.session;
+  if (!userId) return res.status(401).json({ error: 'Not logged in' });
+  
+  try {
+    const {reviewId } = req.params;
+    const { rating, comment } = req.body;
+    
+    const review = await prisma.review.findUnique({
+      where: { id: parseInt(reviewId) }
+    });
+    
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    if (review.userId !== userId) {
+      return res.status(403).json({ error: 'cannot update this review' });
+    }
+    
+    const updatedReview = await prisma.review.update({
+      where: { id: parseInt(reviewId) },
+      data: { rating, comment }
+    });
+    
+    res.json(updatedReview);
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to update review', details: error.message });
+  }
+});
+
+//DELETE a review
+app.delete('/reviews/:reviewId', async (req, res) => {
+  const userId = req.cookies.session;
+  if (!userId) return res.status(401).json({ error: 'Not logged in' });
+  
+  try {
+    const { reviewId } = req.params;
+    const review = await prisma.review.findUnique({
+      where: { id: parseInt(reviewId) }
+    });
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    if (review.userId !== userId) {
+      return res.status(403).json({ error: 'cannot delete this review' });
+    }
+    
+    await prisma.review.delete({
+      where: { id: parseInt(reviewId) }
+    });
+    res.json({ message: 'Review deleted ' });
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to delete review', details: error.message });
+  }
+});
+
+//GET user's reviews
+app.get('/user/reviews', async (req, res) => {
+  const userId = req.cookies.session;
+  if (!userId) return res.status(401).json({ error: 'Not logged in' });
+  
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    res.json(reviews);
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to fetch user reviews', details: error.message });
+  }
+});
+
+// POST mark review as helpful
+app.post('/reviews/:reviewId/helpful', async (req, res) => {
+  const userId = req.cookies.session;
+  if (!userId) return res.status(401).json({ error: 'Not logged in' });
+  try {
+    const { reviewId } = req.params;
+    const review = await prisma.review.update({
+      where: { id: parseInt(reviewId) },
+      data: { helpful: { increment: 1 } }
+    });
+    
+    res.json({ helpful: review.helpful });
+  } catch (error) {
+    await logApiError(req, res, error);
+    res.status(500).json({ error: 'Failed to mark review as helpful', details: error.message });
+  }
+});
+
 // API error logs endpoint
 app.get('/api/errors', async (req, res) => {
   try {
