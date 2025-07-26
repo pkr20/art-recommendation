@@ -16,6 +16,17 @@ model Favorite {
   @@unique([userId, placeId])
 }
 
+model Review {
+  id          Int      @id @default(autoincrement())
+  placeId     String
+  userId      String
+  rating      Int
+  comment     String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, placeId])
+}
+
 model ApiError {
   id           Int      @id @default(autoincrement())
   endpoint     String

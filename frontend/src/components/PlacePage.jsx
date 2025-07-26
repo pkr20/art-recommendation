@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Tooltip from './Tooltip';
 import Loader from './Loader';
+import ReviewsPage from './ReviewsPage';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 function getPriceLevel(level) {
   if (level === 0) return 'Free';
@@ -12,12 +15,13 @@ function getPriceLevel(level) {
   return 'Unknown';
 }
 
-function PlacePage() {
+function PlacePage({ user }) {
   const { placeId } = useParams();
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showReviews, setShowReviews] = useState(false);
 
   // to add a favorite to localstorage
   const addFavorite = (placeId, types) => {
@@ -72,7 +76,7 @@ function PlacePage() {
 
   //set isFavorite
   useEffect(() => {
-    fetch(`http://localhost:3000/favorites/${placeId}`, {
+    fetch(`${API_BASE_URL}/favorites/${placeId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -85,7 +89,7 @@ function PlacePage() {
   const handleFavorite = async (e) => {
     e.stopPropagation();
     try {
-      const response = await fetch('http://localhost:3000/favorites', {
+      const response = await fetch(`${API_BASE_URL}/favorites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -109,7 +113,7 @@ function PlacePage() {
   // delete from favorites by placeId
   const handleUnfavorite = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/favorites/${placeId}`, {
+      const response = await fetch(`${API_BASE_URL}/favorites/${placeId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -159,6 +163,12 @@ function PlacePage() {
       )}
       <div className="placepage-section">
         <strong>Rating:</strong> {details.rating} ({details.user_ratings_total} reviews)
+        <button 
+          className="reviews-btn"
+          onClick={() => setShowReviews(true)}
+        >
+          View ArtBase Reviews
+        </button>
       </div>
       <div className="placepage-section">
         <strong>Price Level:</strong> {getPriceLevel(details.price_level)}
@@ -185,6 +195,12 @@ function PlacePage() {
             ))}
           </div>
         </div>
+      )}
+      
+      {showReviews && (
+        <ReviewsPage placeId={placeId} placeName={details.name} user={user}
+          onClose={() => setShowReviews(false)}
+        />
       )}
     </div>
   );
