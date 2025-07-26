@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Tooltip from './Tooltip';
 import Loader from './Loader';
+import ReviewsPage from './ReviewsPage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -14,12 +15,13 @@ function getPriceLevel(level) {
   return 'Unknown';
 }
 
-function PlacePage() {
+function PlacePage({ user }) {
   const { placeId } = useParams();
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showReviews, setShowReviews] = useState(false);
 
   // to add a favorite to localstorage
   const addFavorite = (placeId, types) => {
@@ -161,6 +163,12 @@ function PlacePage() {
       )}
       <div className="placepage-section">
         <strong>Rating:</strong> {details.rating} ({details.user_ratings_total} reviews)
+        <button 
+          className="reviews-btn"
+          onClick={() => setShowReviews(true)}
+        >
+          View ArtBase Reviews
+        </button>
       </div>
       <div className="placepage-section">
         <strong>Price Level:</strong> {getPriceLevel(details.price_level)}
@@ -187,6 +195,12 @@ function PlacePage() {
             ))}
           </div>
         </div>
+      )}
+      
+      {showReviews && (
+        <ReviewsPage placeId={placeId} placeName={details.name} user={user}
+          onClose={() => setShowReviews(false)}
+        />
       )}
     </div>
   );
