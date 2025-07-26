@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Tooltip from './Tooltip';
 import Loader from './Loader';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 function getPriceLevel(level) {
   if (level === 0) return 'Free';
   if (level === 1) return '$';
@@ -72,7 +74,7 @@ function PlacePage() {
 
   //set isFavorite
   useEffect(() => {
-    fetch(`http://localhost:3000/favorites/${placeId}`, {
+    fetch(`${API_BASE_URL}/favorites/${placeId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -85,7 +87,7 @@ function PlacePage() {
   const handleFavorite = async (e) => {
     e.stopPropagation();
     try {
-      const response = await fetch('http://localhost:3000/favorites', {
+      const response = await fetch(`${API_BASE_URL}/favorites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -109,7 +111,7 @@ function PlacePage() {
   // delete from favorites by placeId
   const handleUnfavorite = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/favorites/${placeId}`, {
+      const response = await fetch(`${API_BASE_URL}/favorites/${placeId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
