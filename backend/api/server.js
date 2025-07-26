@@ -8,6 +8,8 @@ const prisma = new PrismaClient();
 const app = express();
 const port = process.env.PORT || 3000;
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // function that log API errors to database
 async function logApiError(req, res, error, statusCode = 500) {
   try {
@@ -31,7 +33,7 @@ async function logApiError(req, res, error, statusCode = 500) {
 
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:5173', // allow frontend URL
+  origin: FRONTEND_URL,
   credentials: true, // allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -193,5 +195,5 @@ app.get('/api/errors', async (req, res) => {
 
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+
 });

@@ -5,6 +5,8 @@ import { auth } from '../../../backend/api/firebase';
 import Card from './Card';
 import Loader from './Loader';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 export default function FavoritesPage() {
   const navigate = useNavigate();
   const [favoritePlaces, setFavoritePlaces] = useState([]);
@@ -18,7 +20,7 @@ export default function FavoritesPage() {
       setLoading(true);
       
       //fetch favorite place IDs from backend
-      const response = await fetch('http://localhost:3000/favorites', {
+      const response = await fetch(`${API_BASE_URL}/favorites`, {
         credentials: 'include'
       });
       const favoritesData = await response.json();
